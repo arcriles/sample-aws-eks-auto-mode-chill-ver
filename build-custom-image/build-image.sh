@@ -2,7 +2,7 @@
 set -e
 
 # Version 0.0.7 Configuration (minimal approach with proper index.html extraction)
-VERSION="v0.1.0"
+VERSION="v0.1.1"
 IMAGE_NAME="openwebui/custom-build"
 REGISTRY="public.ecr.aws/v2f5y6u4"
 FULL_IMAGE_NAME="$REGISTRY/$IMAGE_NAME:$VERSION"

@@ -4,16 +4,15 @@
 image:
   repository: public.ecr.aws/v2f5y6u4/openwebui/custom-build
   tag: v0.1.1
-  pullPolicy: IfNotPresent
 
 # Configure persistence to use S3
 persistence:
   enabled: true
   provider: "s3"
   s3:
-    bucket: "${s3_bucket_name}"
-    region: "${region}"
-    endpointUrl: "https://s3.${region}.amazonaws.com"
+    bucket: "automode-cluster-openwebui-docs-20250523080440402100000007"
+    region: "ap-southeast-3"
+    endpointUrl: "https://s3.ap-southeast-3.amazonaws.com"
 
 # Configure service account for Pod Identity
 serviceAccount:
@@ -37,16 +36,6 @@ extraEnvVars:
       configMapKeyRef:
         name: "openwebui-oauth-config"
         key: "ENABLE_OAUTH_SIGNUP"
-  - name: "OAUTH_MERGE_ACCOUNTS_BY_EMAIL"
-    valueFrom:
-      configMapKeyRef:
-        name: "openwebui-oauth-config"
-        key: "OAUTH_MERGE_ACCOUNTS_BY_EMAIL"
-  - name: "OAUTH_UPDATE_PICTURE_ON_LOGIN"
-    valueFrom:
-      configMapKeyRef:
-        name: "openwebui-oauth-config"
-        key: "OAUTH_UPDATE_PICTURE_ON_LOGIN"
   - name: "OAUTH_PROVIDER_NAME"
     valueFrom:
       configMapKeyRef:

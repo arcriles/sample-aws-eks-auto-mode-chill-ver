@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: pgvector-setup
-  namespace: vllm-inference
+  namespace: ${namespace}
 spec:
   ttlSecondsAfterFinished: 100
   template:
@@ -38,14 +38,37 @@ spec:
           echo "Port: $DB_PORT"
           echo "Database: $DB_NAME"
           
-          # Test connection first
-          if ! PGPASSWORD="$DB_PASS" psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -c "SELECT 1" > /dev/null 2>&1; then
+          # Test connection to default postgres database first
+          if ! PGPASSWORD="$DB_PASS" psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d postgres -c "SELECT 1" > /dev/null 2>&1; then
             echo "=== [$(date)] ERROR: FAILED TO CONNECT TO POSTGRESQL ==="
             echo "Please check that the RDS instance is running and accessible from the EKS cluster."
             exit 1
           fi
           
-          echo "=== [$(date)] CONNECTION SUCCESSFUL ==="
+          echo "=== [$(date)] CONNECTION TO POSTGRESQL SUCCESSFUL ==="
+          
+          echo "=== [$(date)] CREATING DATABASE IF NOT EXISTS ==="
+          # Create the database if it doesn't exist
+          if PGPASSWORD="$DB_PASS" psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d postgres -c "SELECT 1 FROM pg_database WHERE datname = '$DB_NAME'" | grep -q 1; then
+            echo "=== [$(date)] DATABASE $DB_NAME ALREADY EXISTS ==="
+          else
+            echo "=== [$(date)] CREATING DATABASE $DB_NAME ==="
+            if PGPASSWORD="$DB_PASS" psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d postgres -c "CREATE DATABASE \"$DB_NAME\";"; then
+              echo "=== [$(date)] DATABASE $DB_NAME CREATED SUCCESSFULLY ==="
+            else
+              echo "=== [$(date)] ERROR: FAILED TO CREATE DATABASE $DB_NAME ==="
+              exit 1
+            fi
+          fi
+          
+          echo "=== [$(date)] CONNECTING TO TARGET DATABASE ==="
+          # Now test connection to the target database
+          if ! PGPASSWORD="$DB_PASS" psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -c "SELECT 1" > /dev/null 2>&1; then
+            echo "=== [$(date)] ERROR: FAILED TO CONNECT TO TARGET DATABASE $DB_NAME ==="
+            exit 1
+          fi
+          
+          echo "=== [$(date)] CONNECTION TO TARGET DATABASE SUCCESSFUL ==="
           echo "Creating pgvector extension..."
           
           # Create the extension

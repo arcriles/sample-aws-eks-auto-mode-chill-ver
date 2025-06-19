@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: openwebui-oauth-config
-  namespace: vllm-inference
+  namespace: legal-webui
 data:
   # Non-sensitive OAuth configuration - replace with your actual values
   ENABLE_OAUTH_SIGNUP: "true"

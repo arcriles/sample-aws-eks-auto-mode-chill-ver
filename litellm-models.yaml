@@ -6,7 +6,7 @@
 - model_name: deepseek
   litellm_params:
     model: openai/deepseek-ai/DeepSeek-R1-Distill-Qwen-32B
-    api_base: "http://vllm-service.vllm-inference.svc.cluster.local:8000/v1"
+    api_base: "http://vllm-service.vllm-inference.svc.cluster.local:80/v1"
     api_key: os.environ/DUMMY_API_KEY
     num_retries: 3
 

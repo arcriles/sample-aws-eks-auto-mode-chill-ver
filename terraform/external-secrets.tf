@@ -15,14 +15,16 @@ module "external_secrets_pod_identity" {
         "secretsmanager:GetResourcePolicy",
         "secretsmanager:ListSecretVersionIds"
       ]
-      resources = [
-        aws_secretsmanager_secret.postgres_credentials.arn,
-        aws_secretsmanager_secret.db_connection_string.arn,
-        aws_secretsmanager_secret.litellm_master_salt.arn,
-        aws_secretsmanager_secret.litellm_api_keys.arn,
-        aws_secretsmanager_secret.litellm_db_connection_string.arn,
-        aws_secretsmanager_secret.oauth_credentials.arn
-      ]
+      resources = concat(
+        [for k, v in aws_secretsmanager_secret.postgres_credentials : v.arn],
+        [for k, v in aws_secretsmanager_secret.db_connection_string : v.arn],
+        [
+          aws_secretsmanager_secret.litellm_master_salt.arn,
+          aws_secretsmanager_secret.litellm_api_keys.arn,
+          aws_secretsmanager_secret.litellm_db_connection_string.arn,
+          aws_secretsmanager_secret.oauth_credentials.arn
+        ]
+      )
     }
   ]
 
@@ -73,20 +75,25 @@ resource "helm_release" "external_secrets" {
 
 # ClusterSecretStore configuration moved to setup.tf using templates
 
-# Create a separate connection string secret for easier management and rotation
+# Create separate connection string secrets for easier management and rotation - one per tenant
 resource "aws_secretsmanager_secret" "db_connection_string" {
-  name_prefix = "${var.name}-db-connection-"
-  recovery_window_in_days = 0  # Allow immediate deletion
+  for_each = var.tenants
+  
+  name_prefix = "${var.name}-db-connection-${each.value.name}-"
+  recovery_window_in_days = 0
   
   tags = {
-    Name = "${var.name}-db-connection"
+    Name   = "${var.name}-db-connection-${each.value.name}"
+    Tenant = each.value.name
   }
 }
 
 resource "aws_secretsmanager_secret_version" "db_connection_string_version" {
-  secret_id = aws_secretsmanager_secret.db_connection_string.id
+  for_each = var.tenants
+  
+  secret_id = aws_secretsmanager_secret.db_connection_string[each.key].id
   secret_string = jsonencode({
-    connectionString = "postgresql://postgres:${random_password.postgres.result}@${aws_db_instance.postgres.address}:${aws_db_instance.postgres.port}/vectordb"
+    connectionString = "postgresql://postgres:${random_password.postgres.result}@${aws_db_instance.postgres.address}:${aws_db_instance.postgres.port}/vectordb_${each.value.name}"
   })
   
   depends_on = [aws_db_instance.postgres]

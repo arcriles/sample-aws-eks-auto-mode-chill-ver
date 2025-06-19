@@ -36,39 +36,55 @@ resource "local_file" "setup_neuron" {
   filename = "${path.module}/../nodepools/neuron-nodepool.yaml"
 }
 
-resource "local_file" "setup_openwebui_values" {
-  content = templatefile("${path.module}/../setup-openwebui/templates/values.yaml.tpl", {
-    s3_bucket_name = aws_s3_bucket.openwebui_docs.id
-    region         = var.region
-    rds_endpoint   = aws_db_instance.postgres.endpoint
-  })
-  filename = "${path.module}/../setup-openwebui/values.yaml"
-}
+# Multi-Tenant OpenWebUI Setup
 
-resource "local_file" "setup_openwebui_secret" {
-  content = templatefile("${path.module}/../setup-openwebui/templates/secret.yaml.tpl", {
-    secret_name    = aws_secretsmanager_secret.db_connection_string.name
-  })
-  filename = "${path.module}/../setup-openwebui/secret.yaml"
-}
-
-resource "local_file" "setup_pgvector_job" {
-  content = templatefile("${path.module}/../setup-openwebui/templates/pgvector-job.yaml.tpl", {})
-  filename = "${path.module}/../setup-openwebui/pgvector-job.yaml"
-}
-
-resource "local_file" "setup_cluster_secret_store" {
-  content = templatefile("${path.module}/../setup-openwebui/templates/cluster-secret-store.yaml.tpl", {
+# Generate shared cluster secret store (once) - truly shared
+resource "local_file" "setup_shared_cluster_secret_store" {
+  content = templatefile("${path.module}/../setup-openwebui/shared/templates/cluster-secret-store.yaml.tpl", {
     region = var.region
   })
-  filename = "${path.module}/../setup-openwebui/cluster-secret-store.yaml"
+  filename = "${path.module}/../setup-openwebui/shared/cluster-secret-store.yaml"
 }
 
-resource "local_file" "setup_openwebui_oauth_secret" {
-  content = templatefile("${path.module}/../setup-openwebui/templates/oauth-secret.yaml.tpl", {
+# Generate OAuth secrets per tenant (shared template, tenant-specific files)
+resource "local_file" "setup_tenant_oauth_secret" {
+  for_each = var.tenants
+  content = templatefile("${path.module}/../setup-openwebui/shared/templates/oauth-secret.yaml.tpl", {
     oauth_secret_name = aws_secretsmanager_secret.oauth_credentials.name
+    namespace        = each.value.namespace
   })
-  filename = "${path.module}/../setup-openwebui/oauth-secret.yaml"
+  filename = "${path.module}/../setup-openwebui/${each.value.name}/oauth-secret.yaml"
+}
+
+# Generate tenant-specific values.yaml
+resource "local_file" "setup_tenant_values" {
+  for_each = var.tenants
+  content = templatefile("${path.module}/../setup-openwebui/${each.value.name}/templates/values.yaml.tpl", {
+    s3_bucket_name    = aws_s3_bucket.openwebui_docs[each.key].id
+    region           = var.region
+    rds_endpoint     = aws_db_instance.postgres.endpoint
+    shared_namespace = "vllm-inference"
+  })
+  filename = "${path.module}/../setup-openwebui/${each.value.name}/values.yaml"
+}
+
+# Generate tenant-specific secret.yaml
+resource "local_file" "setup_tenant_secret" {
+  for_each = var.tenants
+  content = templatefile("${path.module}/../setup-openwebui/${each.value.name}/templates/secret.yaml.tpl", {
+    secret_name = aws_secretsmanager_secret.db_connection_string[each.key].name
+    namespace   = each.value.namespace
+  })
+  filename = "${path.module}/../setup-openwebui/${each.value.name}/secret.yaml"
+}
+
+# Generate tenant-specific pgvector-job.yaml
+resource "local_file" "setup_tenant_pgvector_job" {
+  for_each = var.tenants
+  content = templatefile("${path.module}/../setup-openwebui/${each.value.name}/templates/pgvector-job.yaml.tpl", {
+    namespace = each.value.namespace
+  })
+  filename = "${path.module}/../setup-openwebui/${each.value.name}/pgvector-job.yaml"
 }
 
 # LiteLLM template generation
@@ -82,9 +98,10 @@ locals {
 resource "local_file" "setup_litellm_configmap" {
   content = templatefile("${path.module}/../setup-litellm/templates/configmap.yaml.tpl", {
     model_list = local.litellm_models_indented
-    redis_host = aws_elasticache_replication_group.litellm_redis.primary_endpoint_address
-    redis_port = aws_elasticache_replication_group.litellm_redis.port
-    redis_password = random_password.litellm_redis_password.result
+    # COMMENTED OUT: Redis variables - using cloud provider caching instead
+    # redis_host = aws_elasticache_replication_group.litellm_redis.primary_endpoint_address
+    # redis_port = aws_elasticache_replication_group.litellm_redis.port
+    # redis_password = random_password.litellm_redis_password.result
   })
   filename = "${path.module}/../setup-litellm/configmap.yaml"
 }

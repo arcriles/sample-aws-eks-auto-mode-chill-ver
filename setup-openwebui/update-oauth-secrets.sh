@@ -2,6 +2,8 @@
 
 # Script to update OpenWebUI OAuth credentials in AWS Secrets Manager
 # This script reads from ../.env-oauth file and updates the secret created by Terraform
+# Usage: ./update-oauth-secrets.sh [TENANT]
+# TENANT: hr, legal, or us (optional - will prompt if not provided)
 
 set -e
 
@@ -9,10 +11,44 @@ set -e
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}OpenWebUI OAuth Credentials Update Script${NC}"
-echo "=========================================="
+echo -e "${GREEN}OpenWebUI Multi-Tenant OAuth Credentials Update Script${NC}"
+echo "========================================================"
+
+# Function to display usage
+usage() {
+    echo "Usage: $0 [TENANT]"
+    echo "TENANT: hr, legal, or us"
+    echo ""
+    echo "Examples:"
+    echo "  $0 hr      # Update OAuth credentials for HR tenant"
+    echo "  $0 legal   # Update OAuth credentials for Legal tenant"
+    echo "  $0 us      # Update OAuth credentials for US tenant"
+    echo "  $0         # Interactive mode - will prompt for tenant selection"
+    exit 1
+}
+
+# Get tenant from command line argument or prompt user
+TENANT="$1"
+if [ -z "$TENANT" ]; then
+    echo -e "${BLUE}Available tenants: hr, legal, us${NC}"
+    echo -n "Please select a tenant: "
+    read TENANT
+fi
+
+# Validate tenant selection
+case "$TENANT" in
+    hr|legal|us)
+        echo -e "Selected tenant: ${YELLOW}$TENANT${NC}"
+        NAMESPACE="${TENANT}-webui"
+        ;;
+    *)
+        echo -e "${RED}Error: Invalid tenant '$TENANT'. Must be one of: hr, legal, us${NC}"
+        usage
+        ;;
+esac
 
 # Check if .env-oauth file exists
 ENV_FILE="../.env-oauth"
@@ -93,8 +129,8 @@ rm -f /tmp/openwebui-oauth-credentials.json
 
 # Check if External Secrets Operator will sync
 echo ""
-echo "Checking External Secrets sync status..."
-kubectl get externalsecret oauth-external-secret -n vllm-inference -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null | grep -q "True"
+echo "Checking External Secrets sync status for $TENANT tenant..."
+kubectl get externalsecret oauth-external-secret -n $NAMESPACE -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null | grep -q "True"
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ External Secrets Operator is ready and will sync the changes${NC}"
 else
@@ -102,15 +138,15 @@ else
 fi
 
 echo ""
-echo -e "${GREEN}OAuth credentials have been updated in AWS Secrets Manager!${NC}"
+echo -e "${GREEN}OAuth credentials have been updated in AWS Secrets Manager for $TENANT tenant!${NC}"
 echo ""
 echo "Next steps:"
 echo "1. Wait for External Secrets Operator to sync (usually within 15 minutes)"
 echo "2. Restart OpenWebUI deployment to pick up new OAuth credentials:"
-echo "   kubectl rollout restart deployment open-webui -n vllm-inference"
+echo "   kubectl rollout restart deployment open-webui -n $NAMESPACE"
 echo ""
 echo "To verify the secret was synced to Kubernetes:"
-echo "   kubectl get secret openwebui-oauth-credentials -n vllm-inference"
+echo "   kubectl get secret openwebui-oauth-credentials -n $NAMESPACE"
 echo ""
 echo "To check OAuth configuration:"
-echo "   kubectl describe secret openwebui-oauth-credentials -n vllm-inference"
+echo "   kubectl describe secret openwebui-oauth-credentials -n $NAMESPACE"

@@ -2,7 +2,7 @@ apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: postgres-external-secret
-  namespace: vllm-inference
+  namespace: ${namespace}
 spec:
   refreshInterval: "15m"
   secretStoreRef:

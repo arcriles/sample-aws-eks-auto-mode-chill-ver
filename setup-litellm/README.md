@@ -11,10 +11,11 @@ This directory contains the configuration files and deployment manifests for set
 LiteLLM is deployed with the following components:
 
 - **LiteLLM Gateway**: Main proxy service that routes requests to different LLM providers
-- **Redis (ElastiCache)**: Used for caching and session management
 - **PostgreSQL (RDS)**: Stores LiteLLM configuration, user management, and usage tracking
 - **AWS Secrets Manager**: Securely stores database credentials and API keys
 - **External Secrets Operator**: Syncs secrets from AWS Secrets Manager to Kubernetes
+
+> **Note**: Redis/ElastiCache caching has been disabled as most cloud providers (OpenAI, Azure OpenAI, Anthropic, etc.) now provide built-in prompt caching, making additional caching layers redundant.
 
 ## Prerequisites
 
@@ -146,10 +147,6 @@ To use LiteLLM as a proxy for OpenWebUI:
 ```bash
 # Get the LiteLLM master key
 MASTER_KEY=$(kubectl get secret litellm-master-salt -n litellm -o jsonpath='{.data.LITELLM_MASTER_KEY}' | base64 -d)
-
-# Get the OpenWebUI URL
-OPENWEBUI_URL=$(kubectl get service open-webui-service -n vllm-inference -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-echo "OpenWebUI settings is available at: http://$OPENWEBUI_URL/admin/settings"
 ```
 
 Go to settings --> admin settings --> Go to connections --> Create a new OpenAI API Connection
@@ -168,16 +165,18 @@ Now go create a new chat and you should have new model.
 
 - All database credentials are stored in AWS Secrets Manager
 - Pod Identity is used for secure access to AWS services
-- Redis and PostgreSQL use encryption in transit and at rest
+- PostgreSQL uses encryption in transit and at rest
 - API keys for external providers are managed through AWS Secrets Manager
 - ClusterSecretStore is shared securely between OpenWebUI and LiteLLM
+- No Redis credentials stored in ConfigMaps (security improvement)
 
 ## Cost Optimization
 
-- Redis cluster uses `cache.t3.micro` instances for cost efficiency
-- PostgreSQL uses `db.t3.micro` instance class
-- Consider adjusting instance sizes based on your usage patterns
+- PostgreSQL uses `db.t3.micro` instance class for cost efficiency
+- No ElastiCache costs (Redis removed)
+- Consider adjusting PostgreSQL instance size based on your usage patterns
 - Monitor costs through LiteLLM's built-in usage tracking
+- Reduced infrastructure complexity = lower operational costs
 
 ## Cleanup
 
@@ -195,7 +194,8 @@ kubectl delete -f namespace.yaml
 
 # Remove AWS infrastructure (from terraform directory)
 cd ../terraform
-terraform destroy -target=aws_elasticache_replication_group.litellm_redis
+# Note: ElastiCache resources are commented out, no need to destroy
+# terraform destroy -target=aws_elasticache_replication_group.litellm_redis
 terraform destroy -target=aws_db_instance.litellm_postgres
 terraform destroy -target=aws_secretsmanager_secret.litellm_master_salt
 terraform destroy -target=aws_secretsmanager_secret.litellm_api_keys
@@ -207,7 +207,6 @@ terraform destroy -target=aws_secretsmanager_secret.litellm_api_keys
 
 - **Multi-Provider Access**: Route requests to different LLM providers
 - **Cost Tracking**: Monitor usage and costs across providers
-- **Redis Caching**: Improved performance with caching
 - **Usage Analytics**: Track and analyze API usage
 
 ## Next Steps

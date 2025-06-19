@@ -1,10 +1,12 @@
-# SearXNG Setup
+# SearXNG Setup - HR Tenant Only
 
-> **🔍 Step 5 of 5**: This should be completed after LiteLLM setup is finished.
+> **⚠️ IMPORTANT**: This setup is **exclusively for the HR tenant**. Legal and US tenants do not include web search capabilities.
+
+> **🔍 Step 5 of 5**: Complete this ONLY if you deployed the HR tenant and need web search functionality.
 
 ## Overview
 
-This directory contains the configuration files for setting up SearXNG as a privacy-focused web search engine on EKS Auto Mode. SearXNG provides web search capabilities for OpenWebUI, enabling real-time web data integration with your AI chat interface.
+This directory contains the configuration files for setting up SearXNG as a privacy-focused web search engine exclusively for the **HR tenant**. SearXNG provides web search capabilities for the HR OpenWebUI deployment, enabling real-time web data integration with HR team's AI chat interface.
 
 ## What is SearXNG?
 
@@ -29,8 +31,9 @@ SearXNG is deployed as a shared service with the following components:
 Before deploying SearXNG, ensure you have:
 
 1. ✅ **Completed**: Main Terraform infrastructure deployment ([see main README](../README.md))
-2. ✅ **Completed**: OpenWebUI setup ([see OpenWebUI README](../setup-openwebui/))
-3. ✅ **Completed**: LiteLLM setup ([see LiteLLM README](../setup-litellm/))
+2. ✅ **Completed**: HR tenant deployment ([see OpenWebUI README](../setup-openwebui/))
+3. ✅ **Verified**: HR OpenWebUI is running in `hr-webui` namespace
+4. ✅ **Completed**: LiteLLM setup ([see LiteLLM README](../setup-litellm/))
 
 ## Deployment Steps
 
@@ -91,16 +94,16 @@ Once configured, OpenWebUI will:
 - **Maintain Privacy**: No user tracking through SearXNG
 - **Cache Results**: Redis caching improves response times
 
-## Testing Web Search
+## Testing Web Search (HR Tenant Only)
 
-### 1. Access OpenWebUI
+### 1. Access HR OpenWebUI
 
-Get your OpenWebUI URL:
+Get your HR tenant's OpenWebUI URL:
 
 ```bash
-# Get the OpenWebUI load balancer URL
-export OPENWEBUI_URL=$(kubectl get service open-webui-service -n vllm-inference -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-echo "OpenWebUI is available at: http://$OPENWEBUI_URL"
+# Get the HR tenant's load balancer URL
+export HR_OPENWEBUI_URL=$(kubectl get service open-webui-service -n hr-webui -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+echo "HR OpenWebUI is available at: http://$HR_OPENWEBUI_URL"
 ```
 
 ### 2. Enable Web Search in Chat
@@ -131,23 +134,15 @@ You should see:
 - ✅ **Current Information**: Up-to-date results from the web
 - ✅ **Source Attribution**: References to web sources in responses
 
-## Multi-Tenant Considerations
+## HR-Only Integration
 
-SearXNG is deployed as a **shared service** across all OpenWebUI tenants:
+SearXNG is configured exclusively for the HR tenant:
 
-### Benefits:
-- **Cost Effective**: Single SearXNG instance serves all tenants
-- **Consistent Results**: Same search quality across all deployments
-- **Simplified Management**: One service to maintain and update
-- **Resource Efficient**: Shared caching and processing
 
 ### Configuration:
-- **Same URL**: All tenants use `http://searxng.vllm-inference.svc.cluster.local:8080`
-- **No Tenant Isolation**: Search results are not tenant-specific (appropriate for web search)
-- **Shared Cache**: Redis cache benefits all tenants
-
-### Multi-Tenant Setup:
-If you're using the multi-tenant setup, ensure all tenant `values.yaml` files include the SearXNG environment variables.
+- **HR Integration**: Only HR tenant's `values.yaml` includes SearXNG environment variables
+- **Shared Service**: SearXNG deployed in `vllm-inference` namespace for efficient resource usage
+- **Secure Access**: Internal-only service accessible by HR OpenWebUI pods
 
 ## Performance Optimization
 
@@ -315,6 +310,8 @@ helm upgrade open-webui open-webui/open-webui -f values.yaml -n vllm-inference -
 
 Your AI platform is now ready for production workloads with enterprise-grade security, scalability, cost optimization, and comprehensive AI capabilities including document processing and web search.
 
+**👉 Next Step: [Setup Observability](../setup-o11y/)** - Add comprehensive monitoring and cost observability to your AI platform.
+
 ## Support
 
 For issues and questions:
@@ -323,12 +320,3 @@ For issues and questions:
 - Verify all prerequisites are met
 - Follow the sequential setup flow
 - Check troubleshooting steps above
-
-## Next Steps
-
-Consider these enhancements for your AI platform:
-- **Monitoring**: Set up Prometheus and Grafana for comprehensive monitoring
-- **Backup**: Implement automated backup strategies for databases
-- **CI/CD**: Set up automated deployment pipelines
-- **Custom Models**: Add additional LLM providers through LiteLLM
-- **Advanced RAG**: Implement more sophisticated RAG pipelines

@@ -1,6 +1,28 @@
-# Open WebUI Setup
+# Multi-Tenant Open WebUI Setup
 
-> **📋 Step 3 of 5**: This should be completed after the main Terraform infrastructure deployment.
+> **📋 Step 3 of 6**: This should be completed after the main Terraform infrastructure deployment.
+
+## Multi-Tenant Architecture
+
+This deployment supports **three isolated tenants** with shared infrastructure for cost optimization:
+
+### **Tenant Overview**
+- **HR Tenant**: `hr-webui` namespace - Full features including web search capabilities
+- **Legal Tenant**: `legal-webui` namespace - Document-focused deployment
+- **US Tenant**: `us-webui` namespace - Document-focused deployment
+
+### **Shared Components** (Deploy Once)
+- **EKS Cluster**: Single cluster serving all tenants
+- **Apache Tika**: Shared document processing service
+- **vLLM**: Shared inference service (optional)
+- **Storage Class**: Shared EBS storage class
+
+### **Tenant-Specific Components** (Per Tenant)
+- **Namespace**: Isolated Kubernetes namespace
+- **S3 Bucket**: Separate bucket per tenant
+- **PostgreSQL Database**: Separate database per tenant
+- **Load Balancer**: Separate NLB per tenant
+- **Secrets**: Tenant-specific credentials
 
 ## Prerequisites
 
@@ -10,6 +32,36 @@ Before deploying Open WebUI, ensure you have:
 3. The AWS CLI configured with appropriate credentials
 4. kubectl configured to access your cluster
 5. **Custom GAR GPT image** available in ECR (pre-built and ready to use)
+
+## Tenant Selection
+
+**Available tenant options:**
+
+| Tenant | Export Command | Namespace | Features |
+|--------|---------------|-----------|----------|
+| **HR** | `export TENANT=hr` | `hr-webui` | Full features + web search |
+| **Legal** | `export TENANT=legal` | `legal-webui` | Document-focused |
+| **US** | `export TENANT=us` | `us-webui` | Document-focused |
+
+**Choose your tenant before proceeding:**
+
+```bash
+# Option 1: HR Tenant (includes web search capabilities)
+export TENANT=hr
+export NAMESPACE=hr-webui
+
+# Option 2: Legal Tenant (document-focused)
+export TENANT=legal
+export NAMESPACE=legal-webui
+
+# Option 3: US Tenant (document-focused)
+export TENANT=us
+export NAMESPACE=us-webui
+
+# Verify your selection
+echo "Selected tenant: $TENANT"
+echo "Target namespace: $NAMESPACE"
+```
 
 ## OAuth Configuration (Optional)
 
@@ -22,185 +74,130 @@ This deployment supports OAuth/SSO authentication with Microsoft Azure AD and ot
    # Copy the OAuth template (from project root)
    cp ../.env-oauth.tpl ../.env-oauth
    ```
-   Edit the OAuth credentials file
-   
-   Add your sensitive OAuth credentials:
+   Edit the OAuth credentials file and add your sensitive OAuth credentials:
    ```bash
    MICROSOFT_CLIENT_SECRET=your-microsoft-client-secret-here
    OAUTH_CLIENT_SECRET=your-oauth-client-secret-here
    OPENID_PROVIDER_URL=https://your-openid-provider-url/openid-configuration
    ```
 
-2. **Configure non-sensitive OAuth settings** in the deployment:
-   
-   The OAuth configuration is handled through Kubernetes ConfigMaps that are created during deployment. The default values are:
-   ```yaml
-   ENABLE_OAUTH_SIGNUP: "true"
-   OAUTH_PROVIDER_NAME: "Sinarmas (SSO)"
-   OAUTH_SCOPES: "openid email profile"
-   OAUTH_CLIENT_ID: "privategpt"
-   MICROSOFT_CLIENT_ID: "your-microsoft-client-id-here"
-   MICROSOFT_CLIENT_TENANT_ID: "your-microsoft-tenant-id-here"
-   ```
-
-3. **Update OAuth secrets in AWS Secrets Manager**:
+2. **Update OAuth secrets for your tenant**:
    ```bash
-   # Run the OAuth secrets update script
+   # Run the multi-tenant OAuth secrets update script
+   ./update-oauth-secrets.sh $TENANT
+   
+   # Or run interactively (will prompt for tenant selection)
    ./update-oauth-secrets.sh
    ```
    
    This script will:
    - Read your OAuth credentials from `../.env-oauth`
    - Update the AWS Secrets Manager secret
-   - Sync with External Secrets Operator
-
-   > **Note**: The Terraform deployment creates the OAuth secret in AWS Secrets Manager automatically.
-
+   - Sync with External Secrets Operator for your selected tenant
 
 ## Deployment Steps
 
-### 1. Deploy Storage Class
-If in terraform folder:
+### Phase A: Shared Components (Deploy Once)
+
+If you're in the terraform folder:
 ```bash
 cd ../setup-openwebui
 ```
 
+Deploy shared infrastructure that serves all tenants:
+
 ```bash
-kubectl apply -f sc.yaml
+# Deploy shared storage class
+kubectl apply -f shared/sc.yaml
+
+# Deploy shared ClusterSecretStore (External Secrets Operator)
+kubectl apply -f shared/cluster-secret-store.yaml
+
+# Deploy Apache Tika for document processing (shared across all tenants)
+helm repo add tika https://apache.jfrog.io/artifactory/tika
+helm repo update
+kubectl apply -f shared/namespace.yaml
+helm install tika tika/tika -f shared/tika-values.yaml -n vllm-inference
 ```
 
-### 2. Apply Namespace, ClusterSecretStore, and External Secret
+[Optional: vLLM setup]
 ```bash
+# OPTIONAL: Deploy shared vLLM inference service
+kubectl create secret generic hf-secret  -n vllm-inference --from-literal=hf_api_token=<hugging-face-token>
+kubectl apply -f ../nodepools/gpu-nodepool.yaml
+kubectl apply -f shared/llm.yaml
+```
+
+### Phase B: Tenant-Specific Deployment
+
+Navigate to your selected tenant directory and deploy tenant-specific resources:
+
+```bash
+# Navigate to your tenant directory
+cd $TENANT
+
+# Deploy tenant namespace
 kubectl apply -f namespace.yaml
 
-# Apply the ClusterSecretStore to configure AWS Secrets Manager access
-kubectl apply -f cluster-secret-store.yaml
-
-# Apply the External Secret to fetch credentials from AWS Secrets Manager
-kubectl apply -f secret.yaml
-
-# Apply the OAuth ConfigMap for non-sensitive OAuth settings
+# Deploy tenant OAuth configuration
 kubectl apply -f oauth-config.yaml
 
-# Apply the OAuth ExternalSecrets for sensitive OAuth settings
+# Deploy secrets and database setup (generated by Terraform)
+kubectl apply -f secret.yaml
 kubectl apply -f oauth-secret.yaml
-```
 
-> **Note**: The ClusterSecretStore configures access to AWS Secrets Manager, and the External Secret will automatically fetch the database credentials. This approach eliminates hardcoded credentials and follows security best practices.
-
-### 3. Create the pgvector Extension
-```bash
-# Apply the pgvector setup job
+# Create the pgvector extension for this tenant's database
 kubectl apply -f pgvector-job.yaml
 ```
 
-Takes about a minute
+```bash
+# Check pgvector job status
+kubectl get jobs -n $NAMESPACE
+kubectl logs job/pgvector-setup -n $NAMESPACE
+```
+
+Wait for the pgvector job to complete successfully, then continue:
 
 ```bash
-# Check the job status
-kubectl get jobs -n vllm-inference
-
-# View the job logs to verify success
-kubectl logs job/pgvector-setup -n vllm-inference
-```
-
-This job will:
-- Connect to the PostgreSQL database from within the EKS cluster
-- Create the pgvector extension if it doesn't exist
-- Verify that the extension was created successfully
-
-The logs will clearly indicate whether the operation succeeded or failed. If successful, you'll see a message like:
-```
-=== [date] PGVECTOR EXTENSION CREATED SUCCESSFULLY ===
-=== [date] VERIFICATION SUCCESSFUL ===
-=== [date] PGVECTOR SETUP COMPLETED SUCCESSFULLY ===
-```
-
-### 4. Deploy Apache Tika for Document Processing
-
-Apache Tika provides advanced document processing capabilities, supporting over 1000 file formats including PDF, DOCX, XLSX, PPTX, and more.
-
-```bash
-# Add the Apache Tika Helm repository
-helm repo add tika https://apache.jfrog.io/artifactory/tika
-helm repo update
-
-# Deploy Apache Tika
-helm install tika tika/tika -f tika-values.yaml -n vllm-inference
-```
-
-Verify Tika deployment:
-```bash
-# Check if Tika pods are running
-kubectl get pods -n vllm-inference | grep tika
-
-# Check Tika service
-kubectl get svc -n vllm-inference | grep tika
-```
-
-### 5. Deploy Open WebUI with Helm
-
-```bash
+# Deploy OpenWebUI for this tenant
 helm repo add open-webui https://helm.openwebui.com/
 helm repo update
-helm upgrade --install open-webui open-webui/open-webui -f values.yaml -n vllm-inference
-```
+helm upgrade --install open-webui-$TENANT open-webui/open-webui -f values.yaml -n $NAMESPACE
 
-### 6. OPTIONAL - Deploy LLM
-
-Need hugging face token for this.
-```bash
-kubectl create secret generic hf-secret --from-literal=hf_api_token=<hugging-face-token> -n vllm-inference
-kubectl apply -f ../nodepools/gpu-nodepool.yaml
-kubectl apply -f llm.yaml
+# Deploy tenant-specific load balancer
+kubectl apply -f lb.yaml
 ```
 
 ## Configuration Details
 
-The OpenWebUI deployment is configured to use AWS services for storage and vector embeddings:
+### Tenant Isolation
+
+Each tenant operates in complete isolation:
+
+- **Namespace Separation**: Each tenant has its own Kubernetes namespace
+- **S3 Storage**: Separate S3 bucket per tenant with Pod Identity access
+- **Database Isolation**: Separate PostgreSQL database per tenant
+- **Load Balancer**: Dedicated NLB per tenant for external access
 
 ### S3 Document Storage
 
-OpenWebUI stores all uploaded documents in an S3 bucket that was provisioned by the Terraform deployment. This provides:
+Each tenant has its own S3 bucket for document storage:
 
-- Scalable and durable storage for documents
-- Cost-effective storage with lifecycle policies
-- Secure access through AWS Pod Identity
-
-The S3 configuration is defined in `values.yaml.tpl`:
 ```yaml
 persistence:
   enabled: true
   provider: "s3"
   s3:
-    bucket: "${s3_bucket_name}"
+    bucket: "${s3_bucket_name}"  # Tenant-specific bucket
     region: "${region}"
 ```
 
-**Pod Identity for S3 Access**
-
-Instead of using AWS access keys, this deployment uses EKS Pod Identity for secure access to S3. The Terraform deployment:
-
-1. Creates an IAM role with permissions to access the S3 bucket
-2. Associates this role with the OpenWebUI service account
-3. Configures the service account in the Helm chart:
-   ```yaml
-   serviceAccount:
-     enable: true
-     name: "open-webui"
-   ```
-
-This approach eliminates the need for managing AWS credentials and follows security best practices.
+**Pod Identity for S3 Access**: Each tenant uses its own IAM role for secure S3 access without AWS credentials.
 
 ### PostgreSQL Vector Database
 
-OpenWebUI uses the RDS PostgreSQL instance with pg_vector extension for storing and querying vector embeddings:
+Each tenant has its own database on the shared RDS instance:
 
-- Document embeddings are stored as vector data types
-- Similarity searches use PostgreSQL's vector operators
-- The database connection is configured through a Kubernetes secret
-
-The PostgreSQL configuration is defined in the environment variables:
 ```yaml
 extraEnvVars:
   - name: "DATABASE_URL"
@@ -212,182 +209,131 @@ extraEnvVars:
     value: "pgvector"
 ```
 
-The database connection string is stored in a Kubernetes secret (`openwebui-db-credentials`) that is managed by External Secrets Operator and populated from AWS Secrets Manager.
+### Shared Services Integration
 
-### AWS Secrets Manager Integration
+All tenants share common services for cost optimization:
 
-This deployment uses AWS Secrets Manager to securely store and manage database credentials:
+- **Apache Tika**: `http://tika.vllm-inference.svc.cluster.local:9998`
+- **vLLM Service**: `http://vllm-service.vllm-inference.svc.cluster.local/v1`
 
-- **No Hardcoded Credentials**: Database passwords are generated randomly and stored securely in AWS Secrets Manager
-- **External Secrets Operator**: Automatically syncs credentials from AWS Secrets Manager to Kubernetes Secrets
-- **Secure Access**: Uses EKS Pod Identity for secure, IAM-based access to secrets
-- **Credential Rotation**: Supports future credential rotation without application changes
+## Accessing Your Tenant
 
-The External Secrets Operator creates a Kubernetes Secret from the AWS Secrets Manager secret:
-
-```yaml
-apiVersion: external-secrets.io/v1beta1
-kind: ExternalSecret
-metadata:
-  name: postgres-external-secret
-  namespace: vllm-inference
-spec:
-  refreshInterval: "15m"
-  secretStoreRef:
-    name: aws-secretsmanager
-    kind: ClusterSecretStore
-  target:
-    name: openwebui-db-credentials
-    creationPolicy: Owner
-  data:
-  - secretKey: url
-    remoteRef:
-      key: "automode-cluster-postgres-credentials"
-      property: connectionString
-```
-
-This approach follows security best practices by eliminating hardcoded credentials and centralizing credential management.
-
-### Apache Tika Document Processing
-
-OpenWebUI is configured to use Apache Tika for advanced document processing and text extraction. Tika supports over 1000 file formats and provides superior text extraction compared to basic parsers.
-
-**Automatic Configuration:**
-The Tika server URL is automatically configured via environment variable:
-```yaml
-extraEnvVars:
-  - name: "TIKA_SERVER_URL"
-    value: "http://tika.vllm-inference.svc.cluster.local:9998"
-```
-
-**Manual Configuration (Post-Deployment):**
-After deploying OpenWebUI, you need to configure it to use Tika through the admin panel:
-
-1. **Access OpenWebUI Admin Panel**:
-   - Login to your OpenWebUI instance
-   - Navigate to Admin Panel → Settings
-
-2. **Configure Document Processing**:
-   - Click on the **Documents** tab
-   - Change **Default content extraction engine** from "Default" to **"Tika"**
-   - Verify **Context extraction engine URL** is set to: `http://tika.vllm-inference.svc.cluster.local:9998`
-   - Save the changes
-
-3. **Test Tika Integration**:
-   - Upload a PDF, DOCX, or other document
-   - Verify that text extraction works properly
-   - Check that document content is available for chat queries
-
-**Supported File Formats:**
-- **Documents**: PDF, DOCX, DOC, RTF, TXT
-- **Spreadsheets**: XLSX, XLS, CSV
-- **Presentations**: PPTX, PPT
-- **Images**: PNG, JPG, TIFF (with OCR)
-- **Archives**: ZIP, TAR, 7Z
-- **And 1000+ more formats**
-
-## Accessing Open WebUI
-
-After deployment, you can access Open WebUI through the Network Load Balancer:
+After deployment, access your tenant's OpenWebUI through its dedicated load balancer:
 
 ```bash
-# Apply the load balancer configuration
-kubectl apply -f lb.yaml
-```
-
-Will take a while for the Load Balancer to be provisioned. Can get the URL below:
-
-```bash
-# Get the load balancer URL
-export LB_URL=$(kubectl get service open-webui-service -n vllm-inference -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+# Get your tenant's load balancer URL
+export LB_URL=$(kubectl get service open-webui-service -n $NAMESPACE -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
 
 # Display the URL
-echo "Open WebUI is available at: http://$LB_URL"
+echo "Open WebUI for $TENANT tenant is available at: http://$LB_URL"
 ```
 
-The load balancer may take a few minutes to provision and become available. Once ready, you can access Open WebUI by opening the URL in your browser.
+The load balancer may take a few minutes to provision. Once ready, access your tenant's OpenWebUI by opening the URL in your browser.
 
 ## Verification Steps
 
-After deploying OpenWebUI, follow these steps to verify that the S3 and PostgreSQL integrations are working correctly:
+### Verify Tenant Isolation
+
+```bash
+# Check your tenant's namespace
+kubectl get all -n $NAMESPACE
+
+# Verify tenant-specific resources
+kubectl get pods -n $NAMESPACE
+kubectl get services -n $NAMESPACE
+kubectl get secrets -n $NAMESPACE
+```
 
 ### Verify S3 Document Storage
 
-1. **Upload a document in OpenWebUI**:
-   - Access the OpenWebUI interface
-   - Navigate to the document upload section
-   - Upload a PDF or text document
-
-2. **Verify the document is stored in S3**:
+1. **Upload a document in your tenant's OpenWebUI**
+2. **Verify it's stored in the correct S3 bucket**:
    ```bash
-   # Get the S3 bucket name
+   # Get your tenant's S3 bucket name
    cd ../terraform
-   S3_BUCKET=$(terraform output -raw openwebui_s3_bucket)
+   terraform output | grep "webui-docs" | grep ${TENANT}
    
-   # List objects in the bucket
-   aws s3 ls s3://$S3_BUCKET/
-   
-   # You should see your uploaded document or a folder structure containing it
+   # List objects in your tenant's bucket
+   aws s3 ls s3://your-tenant-bucket-name/
    ```
 
-### Verify PostgreSQL Vector Embeddings
+### Verify PostgreSQL Integration
 
-1. **Generate embeddings in OpenWebUI**:
-   - After uploading a document, ensure it's processed for embeddings
-   - This typically happens automatically when you upload a document
+1. **Check database connection**:
+   ```bash
+   # View your tenant's database secret
+   kubectl get secret openwebui-db-credentials -n $NAMESPACE -o yaml
+   
+   # Check pgvector extension status
+   kubectl logs job/pgvector-setup -n $NAMESPACE
+   ```
 
-2. Setup an EC2 Instance and SSH in:
+### Verify Shared Services Access
+
 ```bash
-RDS_ENDPOINT=<Endpoint-from-terraform-output>
-sudo dnf install postgresql15
-psql -h $(echo $RDS_ENDPOINT | cut -d':' -f1) -p $(echo $RDS_ENDPOINT | cut -d':' -f2) -U postgres -d vectordb
-\dx
-\d document_chunk
+# Test Tika service connectivity
+kubectl run test-tika --rm -i --tty --image=curlimages/curl -- \
+  curl -X GET http://tika.vllm-inference.svc.cluster.local:9998/tika
+
+# Check if vLLM is accessible (if deployed)
+kubectl run test-vllm --rm -i --tty --image=curlimages/curl -- \
+  curl -X GET http://vllm-service.vllm-inference.svc.cluster.local/v1/models
 ```
-![alt text](image.png)
 
-![alt text](image-1.png)
+## Tenant-Specific Features
+
+### HR Tenant
+- Full document processing capabilities
+- Additional web search features (configured separately via setup-searxng/)
+- Enhanced RAG capabilities with real-time web data
+
+### Legal & US Tenants
+- Document-focused deployment
+- Optimized for internal knowledge base
+- Enhanced document security and processing
 
 
+## Multi-Tenant Management
 
-### Verify Apache Tika Integration
+### Deploying Additional Tenants
 
-1. **Check Tika Service Status**:
-   ```bash
-   # Verify Tika pods are running
-   kubectl get pods -n vllm-inference | grep tika
-   
-   # Check Tika service endpoint
-   kubectl get svc tika -n vllm-inference
-   ```
+To deploy another tenant, simply repeat Phase B with a different tenant selection:
 
-2. **Test Tika Server Response**:
-   ```bash
-   # Port forward to test Tika locally
-   kubectl port-forward svc/tika 9998:9998 -n vllm-inference &
-   
-   # Test Tika server (should return "This is Tika Server. Please PUT")
-   curl -X GET http://localhost:9998/tika
-   
-   # Stop port forwarding
-   pkill -f "kubectl port-forward"
-   ```
+```bash
+# Deploy Legal tenant
+export TENANT=legal
+export NAMESPACE=legal-webui
+cd legal
+# Follow Phase B steps...
 
-3. **Test Document Processing in OpenWebUI**:
-   - Upload a PDF or DOCX file in OpenWebUI
-   - Verify the document content is extracted and searchable
-   - Check that you can ask questions about the document content
+# Deploy US tenant
+export TENANT=us
+export NAMESPACE=us-webui
+cd us
+# Follow Phase B steps...
+```
 
-If all verifications are successful, your OpenWebUI deployment is correctly using S3 for document storage, PostgreSQL for vector embeddings, and Apache Tika for advanced document processing.
+### Updating OAuth for Specific Tenants
+
+```bash
+# Update OAuth for a specific tenant
+./update-oauth-secrets.sh hr
+./update-oauth-secrets.sh legal
+./update-oauth-secrets.sh us
+```
 
 ## Next Steps
 
-🔄 **Continue to Step 3**: Once OpenWebUI is successfully deployed and verified, proceed to set up LiteLLM as a multi-provider gateway.
+🔄 **Continue to Step 4**: Once your tenant's OpenWebUI is successfully deployed and verified, proceed to set up LiteLLM as a shared multi-provider gateway.
 
 **👉 Next: [Setup LiteLLM](../setup-litellm/)**
 
-LiteLLM will provide:
+LiteLLM provides shared services for all tenants:
 - Multi-provider LLM routing (local vLLM + external APIs)
-- Cost tracking and usage monitoring
+- Cost tracking and usage monitoring across tenants
 - Centralized API key management
 - Redis caching for improved performance
+
+**👉 For HR Tenant: [Setup SearXNG](../setup-searxng/)**
+
+If you deployed the HR tenant, you can optionally set up SearXNG for web search capabilities.

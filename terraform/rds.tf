@@ -5,28 +5,33 @@ resource "random_password" "postgres" {
   override_special = "!*-_"
 }
 
-# Create AWS Secrets Manager secret for PostgreSQL credentials
+# Create AWS Secrets Manager secrets for PostgreSQL credentials - one per tenant
 resource "aws_secretsmanager_secret" "postgres_credentials" {
-  name_prefix = "${var.name}-postgres-credentials-"  # Changed from fixed name to prefix for uniqueness
-  description = "PostgreSQL credentials for OpenWebUI"
-  recovery_window_in_days = 0  # Added to allow immediate deletion
+  for_each = var.tenants
+  
+  name_prefix = "${var.name}-postgres-credentials-${each.value.name}-"
+  description = "PostgreSQL credentials for OpenWebUI ${each.value.name} tenant"
+  recovery_window_in_days = 0
   
   tags = {
-    Name = "${var.name}-postgres-credentials"
+    Name   = "${var.name}-postgres-credentials-${each.value.name}"
+    Tenant = each.value.name
   }
 }
 
-# Store the credentials in the secret
+# Store the credentials in the secrets - separate database per tenant
 resource "aws_secretsmanager_secret_version" "postgres_credentials" {
-  secret_id = aws_secretsmanager_secret.postgres_credentials.id
+  for_each = var.tenants
+  
+  secret_id = aws_secretsmanager_secret.postgres_credentials[each.key].id
   secret_string = jsonencode({
     username = "postgres"
     password = random_password.postgres.result
-    dbname   = "vectordb"
+    dbname   = "vectordb_${each.value.name}"
     engine   = "postgres"
     host     = aws_db_instance.postgres.address
     port     = aws_db_instance.postgres.port
-    connectionString = "postgresql://postgres:${random_password.postgres.result}@${aws_db_instance.postgres.address}:${aws_db_instance.postgres.port}/vectordb"
+    connectionString = "postgresql://postgres:${random_password.postgres.result}@${aws_db_instance.postgres.address}:${aws_db_instance.postgres.port}/vectordb_${each.value.name}"
   })
 
   depends_on = [aws_db_instance.postgres]
@@ -161,10 +166,12 @@ resource "aws_db_instance" "postgres" {
   }
 }
 
-# IAM policy for Secrets Manager access
+# IAM policies for Secrets Manager access - one per tenant
 resource "aws_iam_policy" "secrets_access" {
-  name        = "${var.name}-secrets-access"
-  description = "Policy for accessing PostgreSQL credentials in Secrets Manager"
+  for_each = var.tenants
+  
+  name        = "${var.name}-secrets-access-${each.value.name}"
+  description = "Policy for accessing PostgreSQL credentials in Secrets Manager for ${each.value.name} tenant"
   
   policy = jsonencode({
     Version = "2012-10-17"
@@ -175,28 +182,30 @@ resource "aws_iam_policy" "secrets_access" {
           "secretsmanager:DescribeSecret"
         ]
         Effect   = "Allow"
-        Resource = aws_secretsmanager_secret.postgres_credentials.arn
+        Resource = aws_secretsmanager_secret.postgres_credentials[each.key].arn
       }
     ]
   })
 }
 
-# Attach policy to the OpenWebUI Pod Identity role
+# Attach policies to the OpenWebUI Pod Identity roles
 resource "aws_iam_role_policy_attachment" "secrets_access" {
-  role       = module.openwebui_pod_identity.iam_role_name
-  policy_arn = aws_iam_policy.secrets_access.arn
+  for_each = var.tenants
+  
+  role       = module.openwebui_pod_identity[each.key].iam_role_name
+  policy_arn = aws_iam_policy.secrets_access[each.key].arn
 }
 
-# Output the RDS endpoint
+# Output the RDS endpoint (shared)
 output "rds_endpoint" {
   description = "The connection endpoint for the PostgreSQL instance"
   value       = aws_db_instance.postgres.endpoint
 }
 
-# Output the Secrets Manager secret ARN
-output "postgres_secret_arn" {
-  description = "The ARN of the Secrets Manager secret containing PostgreSQL credentials"
-  value       = aws_secretsmanager_secret.postgres_credentials.arn
+# Output the Secrets Manager secret ARNs - per tenant
+output "postgres_secret_arns" {
+  description = "The ARNs of the Secrets Manager secrets containing PostgreSQL credentials per tenant"
+  value       = { for k, v in aws_secretsmanager_secret.postgres_credentials : k => v.arn }
 }
 
 # Note: The pgvector extension needs to be created manually after the RDS instance is deployed.

@@ -22,3 +22,32 @@ variable "vpc_cidr" {
   default     = "10.0.0.0/16"
   type        = string
 }
+
+variable "enable_kubecost" {
+  description = "Enable KubeCost EKS add-on for Kubernetes-native cost monitoring (free standard bundle)"
+  type        = bool
+  default     = false
+}
+
+# Multi-tenant configuration
+variable "tenants" {
+  description = "Map of tenant configurations for multi-tenant OpenWebUI setup"
+  type = map(object({
+    name      = string
+    namespace = string
+  }))
+  default = {
+    legal = {
+      name      = "legal"
+      namespace = "legal-webui"
+    }
+    hr = {
+      name      = "hr"
+      namespace = "hr-webui"
+    }
+    us = {
+      name      = "us"
+      namespace = "us-webui"
+    }
+  }
+}

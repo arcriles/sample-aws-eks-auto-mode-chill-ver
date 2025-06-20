@@ -322,6 +322,10 @@ cd us
 ./update-oauth-secrets.sh us
 ```
 
+## Apache Tika
+
+Remember to setup Tika on each Tenant Open Webui.
+
 ## Next Steps
 
 🔄 **Continue to Step 4**: Once your tenant's OpenWebUI is successfully deployed and verified, proceed to set up LiteLLM as a shared multi-provider gateway.

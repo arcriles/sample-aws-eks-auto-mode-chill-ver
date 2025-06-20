@@ -104,6 +104,15 @@ openaiBaseApiUrls: ["http://vllm-service.vllm-inference.svc.cluster.local/v1"]
 # extraVolumes: []
 # extraVolumeMounts: []
 
+# Configure resource limits to prevent OOM issues
+resources:
+  requests:
+    cpu: "500m"
+    memory: "256Mi"
+  limits:
+    cpu: "1000m"
+    memory: "512Mi"
+
 # Disable the embedded Ollama chart
 ollama:
   enabled: false
@@ -112,3 +121,10 @@ ollama:
 pipelines:
   persistence:
     enabled: false
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "256Mi"

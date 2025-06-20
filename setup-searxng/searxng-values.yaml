@@ -94,6 +94,38 @@ searxng:
       pool_maxsize: 20
       # Enable persistent connections
       enable_http2: true
+      
+      # Corporate Proxy Configuration (commented out by default)
+      # Uncomment and configure the sections below if your organization requires
+      # all outbound search traffic to go through a corporate proxy server.
+      # See README.md "Corporate Proxy Configuration" section for detailed instructions.
+      
+      # Basic corporate proxy configuration:
+      # proxies:
+      #   http:
+      #     - http://corporate-proxy.company.com:8080
+      #   https:
+      #     - http://corporate-proxy.company.com:8080
+      
+      # For authenticated proxies (if your proxy requires username/password):
+      # proxies:
+      #   http:
+      #     - http://username:password@corporate-proxy.company.com:8080
+      #   https:
+      #     - http://username:password@corporate-proxy.company.com:8080
+      
+      # For multiple proxy servers (load balancing/failover):
+      # proxies:
+      #   http:
+      #     - http://proxy1.company.com:8080
+      #     - http://proxy2.company.com:8080
+      #   https:
+      #     - http://proxy1.company.com:8080
+      #     - http://proxy2.company.com:8080
+      
+      # Additional proxy settings (uncomment if needed):
+      # using_tor_proxy: false
+      # extra_proxy_timeout: 10
     
     # Redis configuration for caching (if enabled)
     redis:

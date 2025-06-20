@@ -144,6 +144,239 @@ SearXNG is configured exclusively for the HR tenant:
 - **Shared Service**: SearXNG deployed in `vllm-inference` namespace for efficient resource usage
 - **Secure Access**: Internal-only service accessible by HR OpenWebUI pods
 
+## Corporate Proxy Configuration
+
+If your organization requires all outbound internet traffic to go through a corporate proxy server, you can configure SearXNG to route all search engine requests through your proxy infrastructure.
+
+### Configuration Steps
+
+1. **Identify Your Proxy Details**
+   
+   Gather the following information from your network administrator:
+   - Proxy server hostname or IP address
+   - Proxy port number (commonly 8080, 3128, or 8888)
+   - Authentication requirements (username/password if needed)
+   - Protocol support (HTTP/HTTPS/SOCKS5)
+
+2. **Edit the Values File**
+   
+   Open the `searxng-values.yaml` file and locate the `Corporate Proxy Configuration` section under `searxng.config.outgoing`.
+
+3. **Choose Your Configuration**
+
+   **For Basic Proxy (no authentication):**
+   ```yaml
+   outgoing:
+     proxies:
+       http:
+         - http://your-proxy-server.company.com:8080
+       https:
+         - http://your-proxy-server.company.com:8080
+   ```
+
+   **For Authenticated Proxy:**
+   ```yaml
+   outgoing:
+     proxies:
+       http:
+         - http://username:password@your-proxy-server.company.com:8080
+       https:
+         - http://username:password@your-proxy-server.company.com:8080
+   ```
+
+   **For Multiple Proxy Servers (failover/load balancing):**
+   ```yaml
+   outgoing:
+     proxies:
+       http:
+         - http://proxy1.company.com:8080
+         - http://proxy2.company.com:8080
+       https:
+         - http://proxy1.company.com:8080
+         - http://proxy2.company.com:8080
+   ```
+
+4. **Uncomment and Modify**
+   
+   - Remove the `#` characters from the beginning of the relevant lines
+   - Replace the example values with your actual proxy server details
+   - Save the file
+
+5. **Deploy or Update SearXNG**
+   
+   If SearXNG is not yet deployed:
+   ```bash
+   helm install searxng searxng/searxng -f searxng-values.yaml -n vllm-inference
+   ```
+   
+   If SearXNG is already running:
+   ```bash
+   helm upgrade searxng searxng/searxng -f searxng-values.yaml -n vllm-inference
+   ```
+
+### Configuration Options
+
+**Basic Settings:**
+- `proxies`: Define HTTP and HTTPS proxy servers
+- `using_tor_proxy`: Set to `true` if using Tor (rarely needed in corporate environments)
+- `extra_proxy_timeout`: Additional timeout for proxy connections (default: 0)
+
+**Advanced Options:**
+- **SOCKS5 Proxy**: Use `socks5://proxy-server:port` format if your organization uses SOCKS5
+- **Per-Engine Proxy**: Configure different proxies for specific search engines (advanced use case)
+- **Source IP**: Specify source IP addresses if you have multiple network interfaces
+
+### Security Considerations
+
+- **Credential Security**: Avoid hardcoding usernames/passwords in configuration files
+- **Network Isolation**: Ensure SearXNG can only access approved proxy servers
+- **Monitoring**: Corporate proxies will log all search engine requests
+- **Performance**: Proxy routing may add latency to search requests
+
+### Important Notes
+
+- **All Search Engines**: The proxy configuration applies to ALL configured search engines
+- **Internal Services**: The proxy only affects outbound requests to external search engines
+- **Redis Cache**: Proxy settings do not affect internal Redis cache connections
+- **Health Checks**: Kubernetes health checks are not affected by proxy settings
+
+## Redis Cache Configuration
+
+SearXNG includes an integrated Redis cache to improve search performance and reduce load on external search engines. Understanding the Redis configuration helps with monitoring, troubleshooting, and optimization.
+
+### What is Redis in SearXNG?
+
+Redis serves as an in-memory cache for SearXNG, providing:
+- **Search Result Caching**: Stores frequently requested search results for faster retrieval
+- **Performance Optimization**: Reduces repeated calls to external search engines
+- **Rate Limiting Support**: Helps manage request throttling and API limits
+- **Session Management**: Temporary storage for search metadata and user sessions
+
+### Deployment Architecture
+
+**Pod-Based Deployment (Not AWS ElastiCache):**
+- Redis runs as a **Kubernetes pod** within your EKS cluster
+- **Internal service** accessible only within the cluster
+- **No external dependencies** or additional AWS service charges
+- **Co-located** with SearXNG for ultra-low latency access
+
+**Service Configuration:**
+```yaml
+redis:
+  enabled: true
+  auth:
+    enabled: false  # Simplified for internal cluster use
+  master:
+    persistence:
+      enabled: false  # Ephemeral cache - no persistent storage
+  replica:
+    replicaCount: 0  # Single Redis instance
+```
+
+### Resource Allocation
+
+**Current Resource Configuration:**
+```yaml
+resources:
+  requests:
+    cpu: "100m"      # 0.1 CPU cores reserved
+    memory: "128Mi"  # 128 MiB memory reserved
+  limits:
+    cpu: "200m"      # Maximum 0.2 CPU cores
+    memory: "256Mi"  # Maximum 256 MiB memory
+```
+
+**Resource Justification:**
+- **CPU**: 100m-200m is sufficient for SearXNG's caching workload
+- **Memory**: 128-256Mi provides adequate cache space for search results
+- **Lightweight**: Optimized for cost-effectiveness in EKS Auto Mode
+- **Scalable**: Can be increased if higher cache hit rates are needed
+
+### Configuration Details
+
+**Connection Settings:**
+- **Service Name**: `searxng-redis`
+- **Port**: `6379` (standard Redis port)
+- **Database**: `0` (default Redis database)
+- **Connection URL**: `redis://searxng-redis:6379/0`
+
+**Security Configuration:**
+- **Authentication**: Disabled (internal cluster security)
+- **Network Access**: Internal cluster only (not externally accessible)
+- **Encryption**: Not required for internal cluster communication
+
+**Storage Configuration:**
+- **Persistence**: Disabled (cache data is ephemeral)
+- **Data Retention**: Cache cleared on pod restart
+- **Backup**: Not applicable (cache data is replaceable)
+
+### Performance Impact
+
+**Cache Benefits:**
+- **Faster Response Times**: Cached results return in milliseconds
+- **Reduced External API Calls**: Fewer requests to Google, Bing, etc.
+- **Lower Latency**: In-cluster cache access vs. external API calls
+- **Cost Optimization**: Reduced API usage and bandwidth
+
+**Cache Behavior:**
+```
+Search Request → Check Redis Cache
+                      ↓
+              Cache Hit (Fast): Return cached results
+                      ↓
+              Cache Miss: Query search engines → Cache results → Return to user
+```
+
+### Customization Options
+
+**Increase Resources (if needed):**
+```yaml
+redis:
+  master:
+    resources:
+      requests:
+        cpu: "200m"      # Increase if CPU usage is high
+        memory: "256Mi"  # Increase for larger cache
+      limits:
+        cpu: "500m"      # Higher limit for burst capacity
+        memory: "512Mi"  # More memory for cache storage
+```
+
+**Enable Persistence (optional):**
+```yaml
+redis:
+  master:
+    persistence:
+      enabled: true
+      size: 1Gi  # Persistent storage size
+```
+
+**Add Authentication (enhanced security):**
+```yaml
+redis:
+  auth:
+    enabled: true
+    password: "your-secure-password"
+```
+
+### When to Modify Redis Configuration
+
+**Increase Resources When:**
+- Redis pod shows high CPU or memory usage
+- Cache hit rates are low due to memory constraints
+- Search response times are slower than expected
+- Multiple users are experiencing performance issues
+
+**Enable Persistence When:**
+- You want to retain cache across pod restarts
+- Search patterns are predictable and benefit from long-term caching
+- You have available persistent storage in your cluster
+
+**Add Replication When:**
+- High availability is critical for your search functionality
+- You need to distribute cache load across multiple Redis instances
+- Your cluster has multiple availability zones
+
 ## Performance Optimization
 
 ### Redis Caching

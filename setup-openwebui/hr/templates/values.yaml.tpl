@@ -107,3 +107,8 @@ openaiBaseApiUrls: ["http://vllm-service.vllm-inference.svc.cluster.local/v1"]
 # Disable the embedded Ollama chart
 ollama:
   enabled: false
+
+# Disable Pipelines persistence to avoid PVC Multi-Attach errors
+pipelines:
+  persistence:
+    enabled: false

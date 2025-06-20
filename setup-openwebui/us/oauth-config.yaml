@@ -8,6 +8,6 @@ data:
   ENABLE_OAUTH_SIGNUP: "true"
   OAUTH_PROVIDER_NAME: "Sinarmas (SSO)"
   OAUTH_SCOPES: "openid email profile"
-  OAUTH_CLIENT_ID: "privategpt"
+  OAUTH_CLIENT_ID: "privategpt-us"
   MICROSOFT_CLIENT_ID: "your-microsoft-client-id-here"
   MICROSOFT_CLIENT_TENANT_ID: "your-microsoft-tenant-id-here"

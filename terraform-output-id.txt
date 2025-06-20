@@ -1,22 +1,22 @@
 configure_kubectl = "aws eks --region ap-southeast-3 update-kubeconfig --name automode-cluster"
-litellm_api_keys_secret_arn = "arn:aws:secretsmanager:ap-southeast-3:980921733825:secret:automode-cluster-litellm-api-keys-20250526100642622300000005-2uA6YS"
-litellm_db_connection_string_arn = "arn:aws:secretsmanager:ap-southeast-3:980921733825:secret:automode-cluster-litellm-db-connection-20250526100642622500000007-DGIhow"
-litellm_master_salt_secret_arn = "arn:aws:secretsmanager:ap-southeast-3:980921733825:secret:automode-cluster-litellm-master-salt-20250526100642621700000001-wK4U6x"
-openwebui_oauth_secret_arn = "arn:aws:secretsmanager:ap-southeast-3:980921733825:secret:automode-cluster-oauth-20250605033309985100000001-LeqXTG"
+litellm_api_keys_secret_arn = "arn:aws:secretsmanager:ap-southeast-3:980921733825:secret:automode-cluster-litellm-api-keys-20250620021813448400000008-jx9F3W"
+litellm_db_connection_string_arn = "arn:aws:secretsmanager:ap-southeast-3:980921733825:secret:automode-cluster-litellm-db-connection-2025062002181553260000001e-pyAECw"
+litellm_master_salt_secret_arn = "arn:aws:secretsmanager:ap-southeast-3:980921733825:secret:automode-cluster-litellm-master-salt-20250620021813941000000014-hIui3Y"
+openwebui_oauth_secret_arn = "arn:aws:secretsmanager:ap-southeast-3:980921733825:secret:automode-cluster-oauth-20250620021813446200000006-oaQoRK"
 openwebui_pod_identity_role_arns = {
-  "hr" = "arn:aws:iam::980921733825:role/openwebui-hr-20250619061737698400000008"
-  "legal" = "arn:aws:iam::980921733825:role/openwebui-legal-20250619061737700100000009"
-  "us" = "arn:aws:iam::980921733825:role/openwebui-us-2025061906173772420000000a"
+  "hr" = "arn:aws:iam::980921733825:role/openwebui-hr-2025062002181344950000000a"
+  "legal" = "arn:aws:iam::980921733825:role/openwebui-legal-20250620021813434200000004"
+  "us" = "arn:aws:iam::980921733825:role/openwebui-us-20250620021813433500000003"
 }
 openwebui_s3_buckets = {
-  "hr" = "automode-cluster-webui-docs-hr-20250619061739131200000015"
-  "legal" = "automode-cluster-webui-docs-legal-20250619061739250400000017"
-  "us" = "automode-cluster-webui-docs-us-20250619061739168900000016"
+  "hr" = "automode-cluster-webui-docs-hr-2025062002181375950000000d"
+  "legal" = "automode-cluster-webui-docs-legal-2025062002181345790000000c"
+  "us" = "automode-cluster-webui-docs-us-2025062002181345330000000b"
 }
 postgres_secret_arns = {
-  "hr" = "arn:aws:secretsmanager:ap-southeast-3:980921733825:secret:automode-cluster-postgres-credentials-hr-2025061906173892020000000f-ZIpDRN"
-  "legal" = "arn:aws:secretsmanager:ap-southeast-3:980921733825:secret:automode-cluster-postgres-credentials-legal-20250619061739040900000013-EXzskq"
-  "us" = "arn:aws:secretsmanager:ap-southeast-3:980921733825:secret:automode-cluster-postgres-credentials-us-20250619061738978300000011-Vwk0NI"
+  "hr" = "arn:aws:secretsmanager:ap-southeast-3:980921733825:secret:automode-cluster-postgres-credentials-hr-20250620021813930100000012-g73stc"
+  "legal" = "arn:aws:secretsmanager:ap-southeast-3:980921733825:secret:automode-cluster-postgres-credentials-legal-20250620021813775500000010-4ofMJn"
+  "us" = "arn:aws:secretsmanager:ap-southeast-3:980921733825:secret:automode-cluster-postgres-credentials-us-2025062002181377550000000e-foc0im"
 }
 rds_endpoint = "automode-cluster-postgres.cdc8m4eskbgq.ap-southeast-3.rds.amazonaws.com:5432"
-s3_vpc_endpoint_id = "vpce-046d8c0497433e6a1"
+s3_vpc_endpoint_id = "vpce-0ef5cc978f0ceb989"

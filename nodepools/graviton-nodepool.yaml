@@ -4,7 +4,7 @@ kind: NodeClass
 metadata:
   name: graviton-nodeclass
 spec:
-  role: automode-cluster-eks-auto-20250523080440398700000006
+  role: automode-cluster-eks-auto-20250620021813445700000005
   subnetSelectorTerms:
     - tags:
         karpenter.sh/discovery: "automode-demo"

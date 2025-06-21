@@ -96,10 +96,10 @@ openaiBaseApiUrls: ["http://vllm-service.vllm-inference.svc.cluster.local/v1"]
 resources:
   requests:
     cpu: "500m"
-    memory: "256Mi"
+    memory: "1Gi"
   limits:
-    cpu: "1000m"
-    memory: "512Mi"
+    cpu: "1500m"
+    memory: "2Gi"
 
 # Disable the embedded Ollama chart
 ollama:

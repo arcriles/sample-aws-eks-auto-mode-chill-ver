@@ -163,7 +163,7 @@ KubeCost provides detailed cost visibility at the Kubernetes workload level, com
 4. **Access KubeCost Dashboard**:
    ```bash
    # Port-forward to access the dashboard
-   kubectl port-forward --namespace kubecost deployment/kubecost-cost-analyzer 9090
+   kubectl port-forward --namespace kubecost deployment/cost-analyzer 9090
    ```
    
    Then open your browser to: `http://localhost:9090`

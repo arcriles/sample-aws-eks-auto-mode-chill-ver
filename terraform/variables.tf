@@ -1,3 +1,8 @@
+variable "remote_state_bucket" {
+  description = "Name of the S3 bucket storing the remote state"
+  type        = string
+}
+
 variable "name" {
   description = "Name of the VPC and EKS Cluster"
   default     = "automode-cluster"

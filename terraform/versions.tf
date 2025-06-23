@@ -23,4 +23,10 @@ terraform {
       version = ">= 3.5"
     }
   }
+  backend "s3" {
+    bucket         = var.remote_state_bucket     # Your S3 bucket name
+    key            = "state/terraform.tfstate"   # Path within the bucket
+    region         = var.region                  # Bucket region
+    encrypt        = true                        # Enable encryption
+  }
 }

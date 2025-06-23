@@ -4,7 +4,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 5.34"
+      version = "~> 5.95"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
@@ -12,7 +12,7 @@ terraform {
     }
     helm = {
       source  = "hashicorp/helm"
-      version = ">= 2.9"
+      version = "~> 2.9"
     }
     null = {
       source  = "hashicorp/null"
@@ -24,9 +24,9 @@ terraform {
     }
   }
   backend "s3" {
-    bucket         = var.remote_state_bucket     # Your S3 bucket name
+    bucket         = "test-bucket-127345"        # Your S3 bucket name
     key            = "state/terraform.tfstate"   # Path within the bucket
-    region         = var.region                  # Bucket region
+    region         = "ap-southeast-3"            # Bucket region
     encrypt        = true                        # Enable encryption
   }
 }

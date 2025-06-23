@@ -1,0 +1,14 @@
+==================================================
+📋 Repository Details:
+  Registry: 980921733825.dkr.ecr.ap-southeast-3.amazonaws.com
+  Repository: openwebui/custom-build
+  Full URL: 980921733825.dkr.ecr.ap-southeast-3.amazonaws.com/openwebui/custom-build
+
+🔑 Authentication Command:
+  aws ecr get-login-password --region ap-southeast-3 | docker login --username AWS --password-stdin 980921733825.dkr.ecr.ap-southeast-3.amazonaws.com
+
+🏗️  Build Commands (using enhanced build script):
+  # Use the enhanced build script with your private ECR:
+  ./build-image.sh --image 980921733825.dkr.ecr.ap-southeast-3.amazonaws.com/openwebui/custom-build:v0.1.0
+
+

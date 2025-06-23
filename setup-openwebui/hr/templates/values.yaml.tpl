@@ -114,6 +114,28 @@ openaiBaseApiUrls: ["http://vllm-service.vllm-inference.svc.cluster.local/v1"]
 # extraVolumes: []
 # extraVolumeMounts: []
 
+# Configure resource limits to prevent OOM issues
+# HR has additional SearXNG features requiring more resources
+resources:
+  requests:
+    cpu: "750m"
+    memory: "1.5Gi"
+  limits:
+    cpu: "2000m"
+    memory: "3Gi"
+
 # Disable the embedded Ollama chart
 ollama:
   enabled: false
+
+# Disable Pipelines persistence to avoid PVC Multi-Attach errors
+pipelines:
+  persistence:
+    enabled: false
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "256Mi"

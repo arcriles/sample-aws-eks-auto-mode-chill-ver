@@ -52,7 +52,6 @@ resource "aws_eks_addon" "kubecost" {
   count         = var.enable_kubecost ? 1 : 0
   cluster_name  = module.eks.cluster_name
   addon_name    = "kubecost_kubecost"
-  addon_version = "v1.97.0-eksbuild.1"
   
   tags = local.tags
 }

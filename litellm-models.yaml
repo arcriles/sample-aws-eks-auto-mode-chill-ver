@@ -17,56 +17,70 @@
    litellm_params:
      model: azure/gpt-4o
      api_base: https://openai-q2ifd2wgmoexo.openai.azure.com
-     api_version: "2025-01-01-preview"
+     api_version: "2025-04-01-preview"
      api_key: os.environ/AZURE_GPT_4O_API_KEY
 
  - model_name: gpt-4.1
    litellm_params:
      model: azure/gpt-4.1
      api_base: https://openai-q2ifd2wgmoexo.openai.azure.com
-     api_version: "2025-01-01-preview"
+     api_version: "2025-04-01-preview"
      api_key: os.environ/AZURE_GPT_41_API_KEY
+
+ - model_name: o4-mini
+   litellm_params:
+     model: azure/o4-mini
+     api_base: https://openai-q2ifd2wgmoexo.openai.azure.com
+     api_version: "2025-04-01-preview"
+     api_key: os.environ/AZURE_O4_MINI_API_KEY
+
+ - model_name: gpt-4.1-mini
+   litellm_params:
+     model: azure/gpt-4.1-mini
+     api_base: https://openai-q2ifd2wgmoexo.openai.azure.com
+     api_version: "2025-04-01-preview"
+     api_key: os.environ/AZURE_GPT_41_MINI_API_KEY
 
  - model_name: gpt-4o-mini
    litellm_params:
      model: azure/gpt-4o-mini
      api_base: https://openai-q2ifd2wgmoexo.openai.azure.com
-     api_version: "2025-01-01-preview"
+     api_version: "2025-04-01-preview"
      api_key: os.environ/AZURE_GPT_4O_MINI_API_KEY
 
  - model_name: text-embedding-3-large
    litellm_params:
      model: azure/text-embedding-3-large
      api_base: https://openai-q2ifd2wgmoexo.openai.azure.com
-     api_version: "2023-05-15"
+     api_version: "2025-04-01-preview"
      api_key: os.environ/AZURE_TEXT_EMBEDDING_3_LARGE_API_KEY
 
  - model_name: text-embedding-3-small
    litellm_params:
      model: azure/text-embedding-3-small
      api_base: https://openai-q2ifd2wgmoexo.openai.azure.com
-     api_version: "2023-05-15"
+     api_version: "2025-04-01-preview"
      api_key: os.environ/AZURE_TEXT_EMBEDDING_3_SMALL_API_KEY
 
  - model_name: whisper
    litellm_params:
      model: azure/whisper
      api_base: https://openai-q2ifd2wgmoexo.openai.azure.com
-     api_version: "2024-06-01"
+     api_version: "2025-04-01-preview"
      api_key: os.environ/AZURE_WHISPER_API_KEY
 
  - model_name: gpt-4o-mini-transcribe
    litellm_params:
      model: azure/gpt-4o-mini-transcribe
      api_base: https://openai-q2ifd2wgmoexo.openai.azure.com
-     api_version: "2025-03-01-preview"
+     api_version: "2025-04-01-preview"
      api_key: os.environ/AZURE_GPT_4O_MINI_TRANSCRIBE_API_KEY
 
  - model_name: gpt-4o-transcribe
    litellm_params:
      model: azure/gpt-4o-transcribe
      api_base: https://openai-q2ifd2wgmoexo.openai.azure.com
-     api_version: "2025-03-01-preview"
+     api_version: "2025-04-01-preview"
      api_key: os.environ/AZURE_GPT_4O_TRANSCRIBE_API_KEY
 
  - model_name: gpt-image-1
@@ -80,7 +94,7 @@
    litellm_params:
      model: azure/dall-e-3
      api_base: https://aulia-m3odnaiy-eastus.cognitiveservices.azure.com
-     api_version: "2024-02-01"
+     api_version: "2025-04-01-preview"
      api_key: os.environ/AZURE_DALL_E_3_API_KEY
 
 # Example: Azure AI Models

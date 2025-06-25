@@ -2,7 +2,7 @@
 
 # Use custom GAR GPT branded image with minimal approach (database compatible)
 image:
-  repository: 980921733825.dkr.ecr.ap-southeast-3.amazonaws.com/openwebui/custom-build
+  repository: 513158237195.dkr.ecr.ap-southeast-3.amazonaws.com/openwebui/gar-gpt
   tag: v0.1.0
   pullPolicy: IfNotPresent
 

@@ -9,7 +9,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Repository name
-REPO_NAME="openwebui/custom-build"
+REPO_NAME="openwebui/gar-gpt"
 
 echo -e "${BLUE}🔧 Setting up Private ECR Repository for GAR GPT Custom Image${NC}"
 echo "=================================================="

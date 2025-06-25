@@ -4,7 +4,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 5.34"
+      version = "~> 5.95"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
@@ -12,7 +12,7 @@ terraform {
     }
     helm = {
       source  = "hashicorp/helm"
-      version = ">= 2.9, < 3.0"
+      version = "~> 2.9"
     }
     null = {
       source  = "hashicorp/null"
@@ -22,5 +22,11 @@ terraform {
       source  = "hashicorp/random"
       version = ">= 3.5"
     }
+  }
+  backend "s3" {
+    bucket         = "terraform-state-openwebui"        # Your S3 bucket name
+    key            = "state/terraform.tfstate"   # Path within the bucket
+    region         = "ap-southeast-3"            # Bucket region
+    encrypt        = true                        # Enable encryption
   }
 }

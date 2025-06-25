@@ -1,0 +1,266 @@
+# SearXNG Helm Chart Values - Optimized for OpenWebUI Integration
+# Based on official SearXNG Helm chart with OpenWebUI-specific optimizations
+
+image:
+  repository: searxng/searxng
+  tag: latest
+  pullPolicy: Always
+
+# Environment variables for SearXNG configuration
+env:
+  INSTANCE_NAME: "openwebui-search"
+  BASE_URL: "http://searxng.vllm-inference.svc.cluster.local:8080/"
+  AUTOCOMPLETE: "true"
+  # Bind to all interfaces for Kubernetes service access
+  BIND_ADDRESS: "0.0.0.0:8080"
+
+# Controller configuration
+controller:
+  strategy: "RollingUpdate"
+
+# Service configuration - ClusterIP for internal access only
+service:
+  main:
+    type: ClusterIP
+    ports:
+      http:
+        port: 8080
+        targetPort: 8080
+
+# Disable external ingress - SearXNG is internal only
+ingress:
+  main:
+    enabled: false
+
+# Disable persistence - SearXNG is stateless
+persistence:
+  config:
+    enabled: false
+
+# SearXNG-specific configuration optimized for OpenWebUI
+searxng:
+  config:
+    use_default_settings: true
+    
+    # Server configuration
+    server:
+      # Generate a secure secret key for production
+      secret_key: "openwebui-searxng-$(openssl rand -hex 32)"
+      # Enable limiter for production use
+      limiter: false
+      # Image proxy settings for security
+      image_proxy: true
+    
+    # Search configuration optimized for AI integration
+    search:
+      # Enable both HTML and JSON formats (JSON required for OpenWebUI)
+      formats: ["html", "json"]
+      # Default search language
+      default_lang: "en"
+      # Autocomplete settings
+      autocomplete: "google"
+      autocomplete_min: 4
+      # Safe search enabled by default
+      safe_search: 1
+      # Maximum search timeout
+      search_timeout: 10.0
+      # Results per page
+      default_http_headers:
+        X-Content-Type-Options: nosniff
+        X-XSS-Protection: "1; mode=block"
+        X-Download-Options: noopen
+        X-Robots-Tag: noindex, nofollow
+        Referrer-Policy: no-referrer
+    
+    # UI configuration
+    ui:
+      # Disable unnecessary UI elements for API-only usage
+      static_use_hash: true
+      # Default theme
+      default_theme: simple
+      # Results on new tab
+      results_on_new_tab: false
+    
+    # Outgoing request configuration
+    outgoing:
+      # Request timeout
+      request_timeout: 10.0
+      # Maximum redirects
+      max_request_timeout: 15.0
+      # User agent
+      useragent_suffix: "OpenWebUI-SearXNG"
+      # Pool connections for better performance
+      pool_connections: 100
+      pool_maxsize: 20
+      # Enable persistent connections
+      enable_http2: true
+      
+      # Corporate Proxy Configuration (commented out by default)
+      # Uncomment and configure the sections below if your organization requires
+      # all outbound search traffic to go through a corporate proxy server.
+      # See README.md "Corporate Proxy Configuration" section for detailed instructions.
+      
+      # Basic corporate proxy configuration:
+      # proxies:
+      #   http:
+      #     - http://corporate-proxy.company.com:8080
+      #   https:
+      #     - http://corporate-proxy.company.com:8080
+      
+      # For authenticated proxies (if your proxy requires username/password):
+      # proxies:
+      #   http:
+      #     - http://username:password@corporate-proxy.company.com:8080
+      #   https:
+      #     - http://username:password@corporate-proxy.company.com:8080
+      
+      # For multiple proxy servers (load balancing/failover):
+      # proxies:
+      #   http:
+      #     - http://proxy1.company.com:8080
+      #     - http://proxy2.company.com:8080
+      #   https:
+      #     - http://proxy1.company.com:8080
+      #     - http://proxy2.company.com:8080
+      
+      # Additional proxy settings (uncomment if needed):
+      # using_tor_proxy: false
+      # extra_proxy_timeout: 10
+    
+    # Redis configuration for caching (if enabled)
+    redis:
+      url: "redis://searxng-redis:6379/0"
+    
+    # Engines configuration - optimized selection for comprehensive search
+    engines:
+      # Disable engines that might be problematic or slow
+      - name: google
+        disabled: false
+        weight: 1.0
+
+# Resource configuration for production use
+resources:
+  requests:
+    cpu: "200m"
+    memory: "512Mi"
+  limits:
+    cpu: "1000m"
+    memory: "1Gi"
+
+# Health check probes
+probes:
+  readiness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /healthz
+        port: 8080
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+  
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /healthz
+        port: 8080
+      initialDelaySeconds: 60
+      periodSeconds: 30
+      timeoutSeconds: 10
+      failureThreshold: 3
+  
+  startup:
+    enabled: true
+    custom: true
+    spec:
+      httpGet:
+        path: /healthz
+        port: 8080
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 12
+
+# Node selector for optimal placement
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity rules
+affinity: {}
+
+# Pod disruption budget for high availability
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Horizontal Pod Autoscaler (optional)
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Enable Redis for caching (recommended for production)
+redis:
+  enabled: true
+  # Redis configuration optimized for SearXNG caching
+  auth:
+    enabled: false  # Simplified for internal use
+  master:
+    persistence:
+      enabled: false  # Cache data doesn't need persistence
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "200m"
+        memory: "256Mi"
+  replica:
+    replicaCount: 0  # Single Redis instance for simplicity
+
+# Service monitor for Prometheus (if available)
+serviceMonitor:
+  enabled: false
+  labels: {}
+  annotations: {}
+
+# Pod annotations
+podAnnotations:
+  # Prometheus scraping (if enabled)
+  prometheus.io/scrape: "false"
+  prometheus.io/port: "8080"
+  prometheus.io/path: "/stats"
+
+# Pod labels
+podLabels:
+  app.kubernetes.io/component: "search-engine"
+  app.kubernetes.io/part-of: "openwebui-platform"
+
+# Network policy (optional - uncomment if using network policies)
+# networkPolicy:
+#   enabled: true
+#   ingress:
+#     - from:
+#       - namespaceSelector:
+#           matchLabels:
+#             name: vllm-inference
+#       ports:
+#       - protocol: TCP
+#         port: 8080
+
+# Additional environment variables (if needed)
+extraEnvVars: []
+
+# Additional volumes (if needed)
+extraVolumes: []
+
+# Additional volume mounts (if needed)
+extraVolumeMounts: []

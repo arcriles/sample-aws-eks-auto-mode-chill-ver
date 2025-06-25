@@ -129,7 +129,7 @@ resource "aws_db_instance" "postgres" {
   identifier             = "${var.name}-postgres"
   engine                 = "postgres"
   engine_version         = "15.13"
-  instance_class         = "db.t3.medium"
+  instance_class         = "db.m6g.large"
   allocated_storage      = 20
   max_allocated_storage  = 100
   storage_type           = "gp3"

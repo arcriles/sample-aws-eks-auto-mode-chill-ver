@@ -24,7 +24,7 @@ terraform {
     }
   }
   backend "s3" {
-    bucket         = "test-bucket-127345"        # Your S3 bucket name
+    bucket         = "terraform-state-openwebui"        # Your S3 bucket name
     key            = "state/terraform.tfstate"   # Path within the bucket
     region         = "ap-southeast-3"            # Bucket region
     encrypt        = true                        # Enable encryption

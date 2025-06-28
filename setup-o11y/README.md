@@ -199,6 +199,178 @@ KubeCost provides detailed cost visibility at the Kubernetes workload level, com
 
 > **Note**: KubeCost provides immediate value with the free standard bundle, giving you Kubernetes-native cost insights that complement your existing AWS Cost Explorer setup. The enterprise features are only needed for advanced use cases.
 
+## Resource Optimization with Goldilocks
+
+> **🎯 Resource Right-Sizing**: VPA-powered recommendations for optimal resource allocation
+
+Goldilocks provides **Vertical Pod Autoscaler (VPA) recommendations** through an easy-to-use dashboard, helping you right-size your workloads for optimal performance and cost efficiency.
+
+### What is Goldilocks?
+
+Goldilocks uses the **Kubernetes Vertical Pod Autoscaler** to analyze your workloads and provide recommendations for:
+- **CPU requests and limits** - Right-size based on actual usage
+- **Memory requests and limits** - Optimize memory allocation
+- **Cost optimization** - Reduce over-provisioning waste
+- **Performance improvement** - Prevent resource starvation
+
+### Key Benefits
+
+🎯 **Right-Sizing Recommendations**
+- Analyze actual resource usage vs. configured requests/limits
+- Get specific recommendations for CPU and memory optimization
+- Identify over-provisioned and under-provisioned workloads
+
+💰 **Cost Optimization**
+- Reduce waste from over-provisioned resources
+- Prevent performance issues from under-provisioning
+- Optimize resource allocation across all workloads
+
+📊 **Visual Dashboard**
+- Easy-to-understand recommendations interface
+- Historical usage data and trends
+- Namespace-level resource analysis
+
+### Deployment Steps
+
+#### 1. Install Metrics Server
+
+```bash
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+```
+
+#### 2. Create Namespaces
+
+```bash
+# Create namespaces for VPA and Goldilocks
+kubectl create namespace vpa
+kubectl create namespace goldilocks
+```
+
+#### 3. Install Fairwinds VPA (Minimal Configuration)
+
+```bash
+# Add Fairwinds Helm repository
+helm repo add fairwinds-stable https://charts.fairwinds.com/stable
+helm repo update
+
+# Install VPA with minimal configuration (recommender only)
+helm install vpa fairwinds-stable/vpa --namespace vpa -f goldilocks/vpa-values.yaml
+```
+
+> **Safety Note**: This configuration only enables the VPA **recommender** component. The **updater** and **admission controller** are disabled to avoid automatic pod mutations and potential cluster stability issues.
+
+#### 4. Install Goldilocks
+
+```bash
+# Install Goldilocks dashboard
+helm install goldilocks fairwinds-stable/goldilocks --namespace goldilocks
+```
+
+#### 5. Create LoadBalancer for External Access
+
+```bash
+# Deploy LoadBalancer service for dashboard access
+kubectl apply -f goldilocks/goldilocks-lb.yaml
+```
+
+#### 6. Enable Monitoring for Target Namespaces
+
+Label the namespaces you want Goldilocks to monitor:
+
+```bash
+# Enable monitoring for key namespaces
+kubectl label ns goldilocks goldilocks.fairwinds.com/enabled=true
+kubectl label ns vpa goldilocks.fairwinds.com/enabled=true
+kubectl label ns vllm-inference goldilocks.fairwinds.com/enabled=true
+kubectl label ns litellm goldilocks.fairwinds.com/enabled=true
+kubectl label ns hr-webui goldilocks.fairwinds.com/enabled=true
+kubectl label ns legal-webui goldilocks.fairwinds.com/enabled=true
+kubectl label ns us-webui goldilocks.fairwinds.com/enabled=true
+```
+
+### Accessing the Dashboard
+
+After deployment, get the LoadBalancer URL to access the Goldilocks dashboard:
+
+```bash
+# Get the LoadBalancer URL
+export GOLDILOCKS_URL=$(kubectl get service goldilocks-dashboard-lb -n goldilocks -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+
+# Display the URL
+echo "Goldilocks Dashboard is available at: http://$GOLDILOCKS_URL"
+```
+
+The LoadBalancer may take a few minutes to provision. Once ready, access the dashboard by opening the URL in your browser.
+
+### Using the Dashboard
+
+The Goldilocks dashboard provides:
+
+1. **Namespace Overview** - List of monitored namespaces with VPA recommendations
+2. **Workload Details** - Specific recommendations for each deployment/statefulset
+3. **Resource Recommendations** - Suggested CPU and memory values
+4. **Usage Graphs** - Historical resource usage patterns
+
+### Monitoring Key Workloads
+
+Goldilocks will provide recommendations for all major components:
+
+**VPA Components** (`vpa` namespace):
+- VPA recommender service
+- Resource optimization for VPA itself
+
+**Goldilocks Components** (`goldilocks` namespace):
+- Goldilocks dashboard
+- Controller components
+
+**OpenWebUI Components** (`vllm-inference` namespace):
+- OpenWebUI pods
+- Apache Tika document processing
+- SearXNG search engine
+- vLLM inference service (if deployed)
+
+**LiteLLM Gateway** (`litellm` namespace):
+- LiteLLM proxy service
+- Associated sidecars and init containers
+
+**Multi-Tenant Workloads**:
+- HR tenant (`hr-webui` namespace)
+- Legal tenant (`legal-webui` namespace)
+- US tenant (`us-webui` namespace)
+
+### Implementation Workflow
+
+1. **Deploy Goldilocks** - Follow the steps above
+2. **Wait for Data Collection** - Allow 24-48 hours for VPA to collect usage data
+3. **Review Recommendations** - Access dashboard and analyze suggestions
+4. **Apply Optimizations** - Update deployment resource specifications
+5. **Monitor Results** - Track performance and cost improvements
+
+### Configuration Files
+
+The setup includes two key configuration files:
+
+**`goldilocks/vpa-values.yaml`** - Minimal VPA configuration:
+- Enables only the recommender component
+- Disables updater and admission controller for safety
+- Optimized resource limits for the VPA components
+
+**`goldilocks/goldilocks-lb.yaml`** - LoadBalancer service:
+- EKS Auto Mode NLB configuration
+- External access without port-forwarding
+- Consistent with project's LoadBalancer pattern
+
+### Integration with Existing Observability
+
+Goldilocks complements your existing observability stack:
+
+- **Container Insights** - Infrastructure and performance metrics
+- **AWS Cost Explorer** - Financial cost tracking
+- **KubeCost** (optional) - Kubernetes-native cost insights
+- **Goldilocks** - Resource optimization recommendations
+
+Together, these tools provide comprehensive visibility into performance, costs, and optimization opportunities.
+
 ## Prerequisites
 
 Before using the observability features, ensure you have:
@@ -251,6 +423,7 @@ Before using the observability features, ensure you have:
 
 ✅ **Infrastructure Monitoring** - Complete visibility into cluster and application performance  
 ✅ **Cost Tracking** - Understand and optimize your AWS spending  
+✅ **Resource Optimization** - VPA-powered right-sizing recommendations with Goldilocks  
 ✅ **Proactive Alerting** - Foundation for preventing production issues  
 ✅ **Performance Insights** - Data-driven optimization opportunities  
 ✅ **Production Readiness** - Enterprise-grade observability stack  
@@ -259,7 +432,8 @@ Your AI platform now includes:
 - **🤖 AI Chat Interface** - OpenWebUI with custom branding
 - **🔄 Multi-Provider LLM** - LiteLLM gateway with cost tracking
 - **🔍 Web Search** - SearXNG integration for real-time data
-- **📊 Comprehensive Monitoring** - Container Insights and cost observability
+- **📊 Comprehensive Monitoring** - Container Insights, cost observability, and resource optimization
+- **🎯 Resource Right-Sizing** - Goldilocks VPA recommendations for optimal resource allocation
 - **🔒 Enterprise Security** - AWS Secrets Manager and Pod Identity
 - **⚡ Auto-Scaling** - EKS Auto Mode with Karpenter
 

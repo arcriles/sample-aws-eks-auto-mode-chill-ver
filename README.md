@@ -22,7 +22,7 @@ This repository provides a template for deploying Multi Tenant Open Webui with L
 Following is a simplified architecture of this setup:
 ![Simple Architecture](src/simplified-archi.png)
 
-Can take a look at [full architecture](./src/full-archi.png] for a better understanding of the full setup.
+Can take a look at [full architecture](./src/full-archi.png) for a better understanding of the full setup.
 
 ## Prerequisites
 
@@ -57,7 +57,21 @@ cp .env.tpl .env
 
 > **Note**: You can add models later by updating these files and running the update script in setup-litellm/
 
-3. **Deploy Cluster**:
+3. **S3 Backend Setup**:
+
+> **Important**: S3 bucket names must be globally unique across all AWS accounts. You need to replace `test-bucket-1273456` with your own unique bucket name.
+
+```bash
+# Create S3 bucket for Terraform state (replace with your unique bucket name)
+aws s3api create-bucket --bucket <YOUR-UNIQUE-BUCKET-NAME> --region ap-southeast-3 --create-bucket-configuration LocationConstraint=ap-southeast-3
+```
+
+After creating the bucket, update the bucket name in `terraform/versions.tf`:
+- Open `terraform/versions.tf`
+- Replace `test-bucket-1273456` with your unique bucket name in the backend configuration
+- The current placeholder is: `bucket = "test-bucket-1273456"`
+
+4. **Deploy Cluster**:
 ```bash
 # Navigate to Terraform directory
 cd terraform

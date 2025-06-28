@@ -228,6 +228,7 @@ This project includes comprehensive observability setup that provides:
 - Custom CloudWatch dashboards for ETCD and API server metrics
 - Cost observability with uniform tagging strategy
 - Optional KubeCost integration for Kubernetes-native cost monitoring
+- Goldilocks VPA recommendations for resource optimization
 
 The observability setup monitors crucial control plane components to prevent issues like ETCD database lockdowns that can freeze entire clusters, based on real-world production incident prevention strategies.
 
@@ -245,23 +246,32 @@ The observability setup monitors crucial control plane components to prevent iss
 - Optional KubeCost EKS add-on for Kubernetes-native cost monitoring (free)
 - Optimized CloudWatch costs through selective log collection
 
+🎯 **Resource Optimization**
+- Goldilocks dashboard with VPA-powered recommendations
+- Right-sizing suggestions for CPU and memory allocation
+- Visual interface for resource optimization across all workloads
+- Safe VPA configuration (recommender only, no automatic mutations)
+
 🔍 **Key Monitoring Areas**
 - ETCD database size and performance (prevent lockdowns)
 - API server request latency and throughput
 - Admission controller performance metrics
 - Resource utilization and optimization opportunities
+- Workload right-sizing recommendations
 
 🚨 **Proactive Monitoring**
 - Foundation for critical alerting setup
 - Historical trend analysis capabilities
 - Performance bottleneck identification
 - Capacity planning insights
+- Resource waste identification
 
 ✨ **Simplified Setup**
 - Direct EKS add-on configuration with built-in Pod Identity
 - No external configuration files required
 - Streamlined IAM role management
 - Container Insights and Application Signals enabled by default
+- LoadBalancer access for Goldilocks dashboard (no port-forwarding)
 
 For detailed setup instructions and dashboard configuration, proceed to [setup-o11y](./setup-o11y/)
 

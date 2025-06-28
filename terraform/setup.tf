@@ -4,6 +4,14 @@ resource "null_resource" "create_nodepools_dir" {
   }
 }
 
+resource "local_file" "setup_updated_default" {
+  content = templatefile("${path.module}/../nodepool-templates/default-updated-nodepool.yaml.tpl", {
+    node_iam_role_name  = module.eks.node_iam_role_name
+    cluster_name = module.eks.cluster_name
+  })
+  filename = "${path.module}/../nodepools/default-updated-nodepool.yaml"
+}
+
 resource "local_file" "setup_graviton" {
   content = templatefile("${path.module}/../nodepool-templates/graviton-nodepool.yaml.tpl", {
     node_iam_role_name  = module.eks.node_iam_role_name

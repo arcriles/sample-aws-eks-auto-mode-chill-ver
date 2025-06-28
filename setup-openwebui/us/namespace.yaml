@@ -2,3 +2,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: us-webui
+  labels:
+    name: us-webui
+    tenant: us
+    app.kubernetes.io/part-of: openwebui-platform

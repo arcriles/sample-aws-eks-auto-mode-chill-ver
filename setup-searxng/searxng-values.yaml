@@ -46,8 +46,7 @@ searxng:
     server:
       # Generate a secure secret key for production
       secret_key: "openwebui-searxng-$(openssl rand -hex 32)"
-      # Enable limiter for production use
-      limiter: true
+      limiter: false
       # Image proxy settings for security
       image_proxy: true
     

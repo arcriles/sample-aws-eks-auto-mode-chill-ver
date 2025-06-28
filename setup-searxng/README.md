@@ -57,7 +57,18 @@ helm repo add searxng https://charts.searxng.org
 helm repo update
 ```
 
-### 3. Deploy SearXNG
+### 3. Deploy Network Policies (Security Enhancement)
+
+Deploy Network Policies to enforce tenant isolation at the network level:
+
+```bash
+# Deploy Network Policies for SearXNG tenant isolation
+kubectl apply -f network-policies.yaml
+```
+
+> **Important**: These Network Policies ensure that only the HR tenant can access SearXNG, regardless of manual configuration attempts. This provides true network-level security isolation.
+
+### 4. Deploy SearXNG
 
 ```bash
 # Deploy SearXNG with optimized configuration
@@ -66,7 +77,7 @@ helm install searxng searxng/searxng -f searxng-values.yaml -n vllm-inference
 
 > **Note**: SearXNG is deployed in the same `vllm-inference` namespace as OpenWebUI and Tika for easy service discovery.
 
-### 4. Verify Deployment
+### 5. Verify Deployment
 
 Check that SearXNG is running correctly:
 
@@ -80,6 +91,85 @@ kubectl get svc -n vllm-inference | grep searxng
 # Check SearXNG logs
 kubectl logs deployment/searxng -n vllm-inference
 ```
+
+### 6. Verify Network Policy Isolation
+
+Test that the Network Policies are properly enforcing tenant isolation:
+
+```bash
+# Check that Network Policies are deployed
+kubectl get networkpolicies -n vllm-inference
+
+# Verify Network Policy details
+kubectl describe networkpolicy searxng-allow-hr-tenant -n vllm-inference
+kubectl describe networkpolicy searxng-default-deny -n vllm-inference
+```
+
+#### Test HR Tenant Access (Should Work)
+
+```bash
+# Test from HR tenant namespace - this should succeed
+kubectl run test-hr-access --rm -i --tty --image=curlimages/curl --namespace=hr-webui -- \
+  curl -v -m 10 "http://searxng.vllm-inference.svc.cluster.local:8080/search?q=test&format=json"
+```
+
+Expected result: ✅ **Success** - Should return JSON search results
+
+#### Test Legal Tenant Access (Should Fail)
+
+```bash
+# Test from Legal tenant namespace - this should be blocked
+kubectl run test-legal-access --rm -i --tty --image=curlimages/curl --namespace=legal-webui -- \
+  curl -v -m 10 "http://searxng.vllm-inference.svc.cluster.local:8080/search?q=test&format=json"
+```
+
+Expected result: ❌ **Blocked** - Should timeout or be refused
+
+#### Test US Tenant Access (Should Fail)
+
+```bash
+# Test from US tenant namespace - this should be blocked
+kubectl run test-us-access --rm -i --tty --image=curlimages/curl --namespace=us-webui -- \
+  curl -v -m 10 "http://searxng.vllm-inference.svc.cluster.local:8080/search?q=test&format=json"
+```
+
+Expected result: ❌ **Blocked** - Should timeout or be refused
+
+#### Test Internal Service Access (Should Work)
+
+```bash
+# Test from vllm-inference namespace - this should succeed (for health checks)
+kubectl run test-internal-access --rm -i --tty --image=curlimages/curl --namespace=vllm-inference -- \
+  curl -v -m 10 "http://searxng.vllm-inference.svc.cluster.local:8080/healthz"
+```
+
+Expected result: ✅ **Success** - Should return health check response
+
+### Network Policy Verification Summary
+
+After running the tests above, you should see:
+
+| Test Scenario | Expected Result | Security Implication |
+|---------------|----------------|---------------------|
+| **HR Tenant → SearXNG** | ✅ **Success** | HR can access web search |
+| **Legal Tenant → SearXNG** | ❌ **Blocked** | Legal cannot access web search |
+| **US Tenant → SearXNG** | ❌ **Blocked** | US cannot access web search |
+| **Internal Health Checks** | ✅ **Success** | Kubernetes monitoring works |
+
+> **Security Achievement**: Even if someone manually configures SearXNG environment variables in Legal or US tenant deployments, the Network Policies will block access at the network level, providing true security isolation.
+
+## Performance Optimization
+
+> **🚀 Performance Note**: The rate limiter has been **disabled** in SearXNG configuration to prevent "too many requests" errors when multiple OpenWebUI instances make concurrent search requests.
+
+If you experience performance issues, slow responses, or scaling challenges, see the comprehensive **[Performance Tuning Guide](./PERFORMANCE-TUNING.md)** which covers:
+
+- ✅ **Immediate Solutions**: Rate limiting, resource scaling, replica management
+- 🔄 **Scaling Solutions**: Horizontal Pod Autoscaler, engine optimization, request throttling  
+- ⚡ **Advanced Optimizations**: Redis cache tuning, timeout optimization, connection pooling
+
+The performance guide provides step-by-step solutions for handling high-concurrency scenarios in multi-tenant environments.
+
 ## Configuration Details
 
 ### SearXNG Configuration

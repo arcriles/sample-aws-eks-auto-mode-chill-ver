@@ -1,4 +1,4 @@
-# Setting up EKS Auto Mode using Terraform
+# Set up Mutli-Tenant Open Webui on EKS Auto Mode using Terraform
 
 ## Table of Contents
 - [Overview](#overview)
@@ -13,25 +13,16 @@
 - [License and Disclaimer](#license-and-disclaimer)
 
 ## Overview
-[Amazon EKS Auto Mode](https://aws.amazon.com/eks/auto-mode/) simplifies Kubernetes cluster management on AWS. Key benefits include:
+[Amazon EKS Auto Mode](https://aws.amazon.com/eks/auto-mode/) simplifies Kubernetes cluster management on AWS. 
 
-🚀 **Simplified Management**
-- One-click cluster provisioning
-- Automated compute, storage, and networking
-- Seamless integration with AWS services
+This repository provides a template for deploying Multi Tenant Open Webui with LiteLLM, SearXNG and Apache Tika on EKS Auto Mode.
 
-⚡ **Workload Support**
-- Graviton instances for optimal price-performance
-- GPU acceleration for ML/AI workloads
-- Inferentia2 for cost-effective ML inference
-- Mixed architecture support
+## Architecture
 
-🔧 **Infrastructure Features**
-- Auto-scaling with Karpenter
-- Automated load balancer configuration
-- Cost optimization through node consolidation
+Following is a simplified architecture of this setup:
+![Simple Architecture](src/simplified-archi.png)
 
-This repository provides a production-ready template for deploying various workloads on EKS Auto Mode.
+Can take a look at [full architecture](./src/full-archi.png] for a better understanding of the full setup.
 
 ## Prerequisites
 

@@ -101,6 +101,10 @@ resources:
     cpu: "1500m"
     memory: "2Gi"
 
+# Enable Tika for automatic document processing
+tika:
+  enabled: true
+
 # Disable the embedded Ollama chart
 ollama:
   enabled: false

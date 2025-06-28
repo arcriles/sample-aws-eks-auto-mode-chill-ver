@@ -85,6 +85,8 @@ extraEnvVars:
     value: "http://tika.${shared_namespace}.svc.cluster.local:9998"
   
   # SearXNG Web Search Configuration (Step 5 integration)
+  - name: "ENABLE_WEB_SEARCH"
+    value: "True"
   - name: "ENABLE_RAG_WEB_SEARCH"
     value: "True"
   - name: "RAG_WEB_SEARCH_ENGINE"
@@ -113,6 +115,10 @@ resources:
   limits:
     cpu: "2000m"
     memory: "3Gi"
+
+# Enable Tika for automatic document processing
+tika:
+  enabled: true
 
 # Disable the embedded Ollama chart
 ollama:

@@ -40,6 +40,9 @@ Before deploying SearXNG, ensure you have:
 2. ✅ **Completed**: HR tenant deployment ([see OpenWebUI README](../setup-openwebui/))
 3. ✅ **Verified**: HR OpenWebUI is running in `hr-webui` namespace
 4. ✅ **Completed**: LiteLLM setup ([see LiteLLM README](../setup-litellm/))
+5. ✅ **Required**: Network Policy Controller enabled (see step 2 below)
+
+> **⚠️ CRITICAL**: Network Policy support must be enabled in your EKS cluster for tenant isolation to work. Without this, all tenants will have access to SearXNG regardless of the network policies deployed.
 
 ## Deployment Steps
 
@@ -49,7 +52,20 @@ Before deploying SearXNG, ensure you have:
 cd setup-searxng
 ```
 
-### 2. Add SearXNG Helm Repository
+### 2. Enable Network Policy Support (REQUIRED)
+
+> **🚨 CRITICAL STEP**: This step is **mandatory** for network policy enforcement. Without this, all tenants will have access to SearXNG regardless of the network policies deployed.
+
+AWS VPC CNI does not enforce Kubernetes Network Policies by default. You must enable the Network Policy Controller to ensure tenant isolation works properly.
+
+```bash
+# Enable Network Policy Controller in AWS VPC CNI
+kubectl apply -f enable-network-policy.yaml
+```
+
+> **⚠️ Important**: Wait for the VPC CNI pods to restart completely before proceeding. This typically takes 2-3 minutes.
+
+### 3. Add SearXNG Helm Repository
 
 ```bash
 # Add the SearXNG Helm repository
@@ -57,7 +73,7 @@ helm repo add searxng https://charts.searxng.org
 helm repo update
 ```
 
-### 3. Deploy Network Policies (Security Enhancement)
+### 4. Deploy Network Policies (Security Enhancement)
 
 Deploy Network Policies to enforce tenant isolation at the network level:
 
@@ -68,7 +84,7 @@ kubectl apply -f network-policies.yaml
 
 > **Important**: These Network Policies ensure that only the HR tenant can access SearXNG, regardless of manual configuration attempts. This provides true network-level security isolation.
 
-### 4. Deploy SearXNG
+### 5. Deploy SearXNG
 
 ```bash
 # Deploy SearXNG with optimized configuration
@@ -77,7 +93,7 @@ helm install searxng searxng/searxng -f searxng-values.yaml -n vllm-inference
 
 > **Note**: SearXNG is deployed in the same `vllm-inference` namespace as OpenWebUI and Tika for easy service discovery.
 
-### 5. Verify Deployment
+### 6. Verify Deployment
 
 Check that SearXNG is running correctly:
 
@@ -92,7 +108,7 @@ kubectl get svc -n vllm-inference | grep searxng
 kubectl logs deployment/searxng -n vllm-inference
 ```
 
-### 6. Verify Network Policy Isolation
+### 7. Verify Network Policy Isolation
 
 Test that the Network Policies are properly enforcing tenant isolation:
 

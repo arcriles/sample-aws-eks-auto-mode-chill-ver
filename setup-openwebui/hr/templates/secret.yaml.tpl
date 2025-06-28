@@ -18,7 +18,7 @@ spec:
       property: connectionString
 
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: litellm-master-key-external-secret
@@ -34,5 +34,5 @@ spec:
   data:
   - secretKey: LITELLM_MASTER_KEY
     remoteRef:
-      key: litellm-master-salt
+      key: ${litellm_master_salt_secret_name}
       property: LITELLM_MASTER_KEY

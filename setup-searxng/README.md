@@ -1,8 +1,14 @@
 # SearXNG Setup - HR Tenant Only
 
-> **⚠️ IMPORTANT**: This setup is **exclusively for the HR tenant**. Legal and US tenants do not include web search capabilities.
+> **🔍 Optional Component**: Web search capabilities for HR tenant only  
+> **Prerequisites**: ✅ Infrastructure Setup, ✅ HR Tenant OpenWebUI, ✅ LiteLLM Setup
 
-> **🔍 Step 5 of 5**: Complete this ONLY if you deployed the HR tenant and need web search functionality.
+## Setup Flow
+- **Previous**: [LiteLLM Gateway](../setup-litellm/)
+- **Current**: SearXNG Web Search (HR Tenant Only)
+- **Next**: [Observability](../setup-o11y/) - Recommended for production
+
+> **⚠️ IMPORTANT**: This setup is **exclusively for the HR tenant**. Legal and US tenants do not include web search capabilities.
 
 ## Overview
 

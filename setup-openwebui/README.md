@@ -1,6 +1,15 @@
 # Multi-Tenant Open WebUI Setup
 
-> **📋 Step 3 of 6**: This should be completed after the main Terraform infrastructure deployment.
+> **🎨 Core Component**: Required for AI chat functionality  
+> **Prerequisites**: ✅ Infrastructure Setup, ✅ Custom Image Build
+
+## Setup Flow
+- **Previous**: [Custom Image Build](../build-custom-image/)
+- **Current**: Multi-Tenant OpenWebUI Setup  
+- **Next**: Choose your path:
+  - **Required**: [LiteLLM Gateway](../setup-litellm/) - Multi-provider AI access
+  - **Optional**: [Web Search](../setup-searxng/) - HR tenant only
+  - **Monitoring**: [Observability](../setup-o11y/) - Can be done anytime
 
 ## Multi-Tenant Architecture
 

@@ -86,47 +86,36 @@ $(terraform output -raw configure_kubectl)
 
 **👉 Continue to: [Build Custom Image](./build-custom-image/)**
 
-## Setup Flow
+## Component Overview
 
-This project follows a sequential setup process:
+This project provides a modular AI platform with flexible deployment options:
 
-1. **✅ Infrastructure Setup** (completed above)
-   - EKS Auto Mode cluster
-   - VPC, RDS, S3, ElastiCache
-   - External Secrets Operator
+### **🎨 Core Components** (Required)
+- **[Infrastructure Setup](#quick-start)** - EKS Auto Mode cluster, VPC, RDS, S3, ElastiCache
+- **[Custom Image Build](./build-custom-image/)** - GAR GPT branded OpenWebUI container
+- **[Multi-Tenant OpenWebUI](./setup-openwebui/)** - AI chat interface with tenant isolation
 
-2. **🎨 Build Custom Image**
-   - Create a customized OpenWebUI container image
-   - Remove default branding and logos for a clean, professional appearance
-   - Optimize image for your organization's requirements
-   - Essential step before deploying OpenWebUI services
+### **🔄 Integration Components** (Enhances functionality)
+- **[LiteLLM Gateway](./setup-litellm/)** - Multi-provider AI access and cost tracking
+- **[Web Search](./setup-searxng/)** - Privacy-focused search (HR tenant only)
 
-3. **📋 Next: Multi-Tenant OpenWebUI Setup**
-   - Deploy OpenWebUI with multi-tenant architecture (HR, Legal, US)
-   - Separate S3 buckets and PostgreSQL databases per tenant
-   - Set up vector database with pgvector per tenant
-   - Set up shared Apache Tika service
-   - Configure shared vLLM service (optional)
+### **📊 Monitoring Components** (Production ready)
+- **[Observability](./setup-o11y/)** - Infrastructure monitoring and cost management
 
-4. **🔄 LiteLLM Setup**
-   - Deploy LiteLLM as a multi-provider gateway
-   - Configure Redis caching and PostgreSQL tracking
-   - Set up external access via ALB
+## Deployment Paths
 
-5. **🔍 SearXNG Setup**
-   - Deploy privacy-focused web search engine
-   - Enable web search capabilities in OpenWebUI
-   - Complete RAG pipeline with real-time web data
+Choose your deployment path based on your requirements:
 
-6. **📊 Observability Setup**
-   - Container Insights for EKS control plane monitoring
-   - Custom CloudWatch dashboards for ETCD and API server metrics
-   - Cost observability with uniform tagging strategy
-   - Optional KubeCost integration for Kubernetes-native cost monitoring
+### **🚀 Quick Start Path** (Minimal viable platform)
+1. **Infrastructure Setup** (above) → 2. **[Custom Image](./build-custom-image/)** → 3. **[OpenWebUI](./setup-openwebui/)**
 
-**👉 Next Steps:**
-- **First:** [Build Custom Image](./build-custom-image/)
-- **Then:** [Setup OpenWebUI](./setup-openwebui/)
+### **🏢 Enterprise Path** (Full featured platform)
+1. **Infrastructure Setup** (above) → 2. **[Custom Image](./build-custom-image/)** → 3. **[OpenWebUI](./setup-openwebui/)** → 4. **[LiteLLM](./setup-litellm/)** → 5. **[Observability](./setup-o11y/)**
+
+### **🔍 HR Enhanced Path** (Includes web search)
+1. **Infrastructure Setup** (above) → 2. **[Custom Image](./build-custom-image/)** → 3. **[OpenWebUI](./setup-openwebui/)** (HR tenant) → 4. **[LiteLLM](./setup-litellm/)** → 5. **[Web Search](./setup-searxng/)** → 6. **[Observability](./setup-o11y/)**
+
+**� Start Here:** [Build Custom Image](./build-custom-image/)
 
 ## Setup Open Webui
 

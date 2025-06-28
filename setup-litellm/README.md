@@ -1,6 +1,14 @@
 # LiteLLM Setup
 
-> **🔄 Step 4 of 5**: This should be completed after OpenWebUI setup is finished.
+> **🔄 Integration Component**: Enhances AI capabilities with multi-provider access  
+> **Prerequisites**: ✅ Infrastructure Setup, ✅ OpenWebUI Setup
+
+## Setup Flow
+- **Previous**: [Multi-Tenant OpenWebUI](../setup-openwebui/)
+- **Current**: LiteLLM Gateway Setup
+- **Next**: Choose your path:
+  - **Optional**: [Web Search](../setup-searxng/) - HR tenant only
+  - **Monitoring**: [Observability](../setup-o11y/) - Recommended for production
 
 ## Overview
 

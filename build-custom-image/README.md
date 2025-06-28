@@ -1,5 +1,13 @@
 # Custom OpenWebUI Image - GAR GPT Branding
 
+> **🎨 Core Component**: Required for branded AI chat interface  
+> **Prerequisites**: ✅ Infrastructure Setup
+
+## Setup Flow
+- **Previous**: [Infrastructure Setup](../README.md#quick-start)
+- **Current**: Custom Image Build
+- **Next**: [Multi-Tenant OpenWebUI](../setup-openwebui/)
+
 This directory contains the files and scripts needed to build a custom OpenWebUI image with GAR GPT branding.
 
 ## Private ECR Setup (Recommended)

@@ -1,6 +1,12 @@
 # Observability Setup
 
-> **📊 Step 6 of 6**: This should be completed after SearXNG setup is finished.
+> **📊 Monitoring Component**: Production-ready observability and cost management  
+> **Prerequisites**: ✅ Infrastructure Setup (Container Insights already enabled)
+
+## Setup Flow
+- **Previous**: Any component setup (can be done anytime)
+- **Current**: Observability & Cost Management
+- **Next**: Production deployment complete!
 
 ## Overview
 

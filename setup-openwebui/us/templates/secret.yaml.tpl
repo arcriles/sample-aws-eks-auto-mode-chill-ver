@@ -16,3 +16,23 @@ spec:
     remoteRef:
       key: "${secret_name}"
       property: connectionString
+
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: litellm-master-key-external-secret
+  namespace: ${namespace}
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: aws-secretsmanager
+    kind: ClusterSecretStore
+  target:
+    name: litellm-master-key
+    creationPolicy: Owner
+  data:
+  - secretKey: LITELLM_MASTER_KEY
+    remoteRef:
+      key: litellm-master-salt
+      property: LITELLM_MASTER_KEY

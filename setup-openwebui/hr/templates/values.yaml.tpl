@@ -98,8 +98,18 @@ extraEnvVars:
   - name: "SEARXNG_QUERY_URL"
     value: "http://searxng.${shared_namespace}.svc.cluster.local:8080/search?q=<query>&format=json"
   
+  # LiteLLM API Key configuration (used for both vLLM and LiteLLM endpoints)
+  - name: "OPENAI_API_KEY"
+    valueFrom:
+      secretKeyRef:
+        name: "litellm-master-key"
+        key: "LITELLM_MASTER_KEY"
+  
 
-openaiBaseApiUrls: ["http://vllm-service.vllm-inference.svc.cluster.local/v1"]
+openaiBaseApiUrls: [
+  "http://vllm-service.vllm-inference.svc.cluster.local/v1",
+  "http://litellm-service.litellm.svc.cluster.local:4000/v1"
+]
 
 # Branding assets are now embedded in the custom image v0.0.2
 # No ConfigMap volume mounts needed

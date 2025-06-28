@@ -82,6 +82,7 @@ resource "local_file" "setup_tenant_secret" {
   content = templatefile("${path.module}/../setup-openwebui/${each.value.name}/templates/secret.yaml.tpl", {
     secret_name = aws_secretsmanager_secret.db_connection_string[each.key].name
     namespace   = each.value.namespace
+    litellm_master_salt_secret_name = aws_secretsmanager_secret.litellm_master_salt.name
   })
   filename = "${path.module}/../setup-openwebui/${each.value.name}/secret.yaml"
 }

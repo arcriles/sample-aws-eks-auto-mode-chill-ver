@@ -84,17 +84,18 @@ extraEnvVars:
   - name: "TIKA_SERVER_URL"
     value: "http://tika.${shared_namespace}.svc.cluster.local:9998"
   
-  # LiteLLM API Key configuration (used for both vLLM and LiteLLM endpoints)
-  - name: "OPENAI_API_KEY"
+  # LiteLLM API Key configuration - using OPENAI_API_KEYS with proper index mapping
+  # The secret contains: dummy-pipeline-key;actual-litellm-key;dummy-vllm-key
+  - name: "OPENAI_API_KEYS"
     valueFrom:
       secretKeyRef:
         name: "litellm-master-key"
-        key: "LITELLM_MASTER_KEY"
+        key: "OPENAI_API_KEYS"
   
 
 openaiBaseApiUrls: [
-  "http://vllm-service.vllm-inference.svc.cluster.local/v1",
-  "http://litellm-service.litellm.svc.cluster.local:4000/v1"
+  "http://litellm-service.litellm.svc.cluster.local:4000/v1",
+  "http://vllm-service.vllm-inference.svc.cluster.local/v1"
 ]
 
 # Branding assets are now embedded in the custom image v0.0.2

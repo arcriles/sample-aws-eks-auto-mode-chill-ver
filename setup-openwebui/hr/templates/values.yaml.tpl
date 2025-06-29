@@ -89,6 +89,8 @@ extraEnvVars:
     value: "True"
   - name: "ENABLE_RAG_WEB_SEARCH"
     value: "True"
+  - name: "WEB_SEARCH_ENGINE"
+    value: "searxng"
   - name: "RAG_WEB_SEARCH_ENGINE"
     value: "searxng"
   - name: "RAG_WEB_SEARCH_RESULT_COUNT"
@@ -98,17 +100,18 @@ extraEnvVars:
   - name: "SEARXNG_QUERY_URL"
     value: "http://searxng.${shared_namespace}.svc.cluster.local:8080/search?q=<query>&format=json"
   
-  # LiteLLM API Key configuration (used for both vLLM and LiteLLM endpoints)
-  - name: "OPENAI_API_KEY"
+  # LiteLLM API Key configuration - using OPENAI_API_KEYS with proper index mapping
+  # The secret contains: dummy-pipeline-key;actual-litellm-key;dummy-vllm-key
+  - name: "OPENAI_API_KEYS"
     valueFrom:
       secretKeyRef:
         name: "litellm-master-key"
-        key: "LITELLM_MASTER_KEY"
+        key: "OPENAI_API_KEYS"
   
 
 openaiBaseApiUrls: [
-  "http://vllm-service.vllm-inference.svc.cluster.local/v1",
-  "http://litellm-service.litellm.svc.cluster.local:4000/v1"
+  "http://litellm-service.litellm.svc.cluster.local:4000/v1",
+  "http://vllm-service.vllm-inference.svc.cluster.local/v1"
 ]
 
 # Branding assets are now embedded in the custom image v0.0.2

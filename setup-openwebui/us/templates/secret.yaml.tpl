@@ -31,6 +31,11 @@ spec:
   target:
     name: litellm-master-key
     creationPolicy: Owner
+    template:
+      type: Opaque
+      data:
+        LITELLM_MASTER_KEY: "{{ .LITELLM_MASTER_KEY }}"
+        OPENAI_API_KEYS: "dummy-pipeline-key;{{ .LITELLM_MASTER_KEY }};dummy-vllm-key"
   data:
   - secretKey: LITELLM_MASTER_KEY
     remoteRef:

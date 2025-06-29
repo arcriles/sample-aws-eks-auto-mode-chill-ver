@@ -1,12 +1,12 @@
 # SearXNG Setup - HR Tenant Only
 
 > **🔍 Optional Component**: Web search capabilities for HR tenant only  
-> **Prerequisites**: ✅ Infrastructure Setup, ✅ HR Tenant OpenWebUI, ✅ LiteLLM Setup
+> **Prerequisites**: ✅ Infrastructure Setup, ✅ LiteLLM Setup
 
 ## Setup Flow
 - **Previous**: [LiteLLM Gateway](../setup-litellm/)
 - **Current**: SearXNG Web Search (HR Tenant Only)
-- **Next**: [Observability](../setup-o11y/) - Recommended for production
+- **Next**: [Multi-Tenant OpenWebUI](../setup-openwebui/) - SearXNG will be ready for HR tenant
 
 > **⚠️ IMPORTANT**: This setup is **exclusively for the HR tenant**. Legal and US tenants do not include web search capabilities.
 
@@ -37,10 +37,11 @@ SearXNG is deployed as a shared service with the following components:
 Before deploying SearXNG, ensure you have:
 
 1. ✅ **Completed**: Main Terraform infrastructure deployment ([see main README](../README.md))
-2. ✅ **Completed**: HR tenant deployment ([see OpenWebUI README](../setup-openwebui/))
-3. ✅ **Verified**: HR OpenWebUI is running in `hr-webui` namespace
-4. ✅ **Completed**: LiteLLM setup ([see LiteLLM README](../setup-litellm/))
-5. ✅ **Required**: Network Policy Controller enabled (see step 2 below)
+2. ✅ **Completed**: LiteLLM setup ([see LiteLLM README](../setup-litellm/))
+3. ✅ **Completed**: Shared components setup (storage class, ClusterSecretStore, Apache Tika)
+4. ✅ **Required**: Network Policy Controller enabled (see step 2 below)
+
+> **⚠️ IMPORTANT**: SearXNG is deployed **before** OpenWebUI tenants to prepare the web search infrastructure. The HR tenant will automatically have access to SearXNG when deployed.
 
 > **⚠️ CRITICAL**: Network Policy support must be enabled in your EKS cluster for tenant isolation to work. Without this, all tenants will have access to SearXNG regardless of the network policies deployed.
 
@@ -121,7 +122,9 @@ kubectl describe networkpolicy searxng-allow-hr-tenant -n vllm-inference
 kubectl describe networkpolicy searxng-default-deny -n vllm-inference
 ```
 
-#### Test HR Tenant Access (Should Work)
+#### Test HR Tenant Access (After OpenWebUI Deployment)
+
+> **Note**: These tests should be run **after** OpenWebUI tenants are deployed in the next step.
 
 ```bash
 # Test from HR tenant namespace - this should succeed
@@ -619,43 +622,48 @@ helm upgrade open-webui open-webui/open-webui -f values.yaml -n vllm-inference -
 
 ## Completion
 
-🎉 **Setup Complete!** You now have a fully functional EKS Auto Mode AI platform with:
+🎉 **SearXNG Setup Complete!** You now have web search infrastructure ready for the HR tenant:
 
-- **✅ Infrastructure**: EKS cluster with Auto Mode features
-- **✅ Custom Branding**: GAR GPT branded OpenWebUI
-- **✅ Document Processing**: S3 storage, PostgreSQL vectors, Apache Tika
-- **✅ Multi-Provider LLM**: LiteLLM gateway with cost tracking
-- **✅ Web Search**: SearXNG integration for real-time web data
+- **✅ Privacy-Focused Search**: SearXNG metasearch engine deployed
+- **✅ Network Policies**: Tenant isolation configured (HR-only access)
+- **✅ Redis Caching**: Performance optimization enabled
+- **✅ JSON API**: Ready for OpenWebUI integration
 
-### Your Complete AI Platform Features:
+### What's Ready:
 
-🤖 **AI Chat Interface**
-- Custom GAR GPT branding
-- Multi-provider LLM access
-- Document upload and processing
-- Real-time web search integration
+🔍 **Web Search Infrastructure**
+- SearXNG service running in `vllm-inference` namespace
+- Network policies enforcing HR-only access
+- Redis caching for improved performance
+- JSON API endpoint optimized for AI integration
 
-📊 **Enterprise Features**
-- Cost tracking and usage analytics
-- Multi-tenant support
-- Secure credential management
-- Scalable infrastructure
+🛡️ **Security & Isolation**
+- Network-level tenant isolation
+- Privacy-focused search (no user tracking)
+- Internal service deployment
+- Secure configuration
 
-🔒 **Security & Privacy**
-- AWS Secrets Manager integration
-- Pod Identity for secure access
-- Privacy-focused web search
-- No user tracking or profiling
+⚡ **Performance Optimized**
+- Rate limiting disabled for multi-tenant use
+- Redis caching enabled
+- Optimized search engine selection
+- Ready for high-concurrency scenarios
 
-🚀 **Production Ready**
-- Auto-scaling with Karpenter
-- Load balancer configuration
-- Redis caching for performance
-- Comprehensive monitoring
+## Next Steps
 
-Your AI platform is now ready for production workloads with enterprise-grade security, scalability, cost optimization, and comprehensive AI capabilities including document processing and web search.
+**👉 Next: [Setup Multi-Tenant OpenWebUI](../setup-openwebui/)**
 
-**👉 Next Step: [Setup Observability](../setup-o11y/)** - Add comprehensive monitoring and cost observability to your AI platform.
+When you deploy OpenWebUI tenants:
+- **HR Tenant** will automatically have web search capabilities
+- **Legal & US Tenants** will be blocked by network policies
+- **All tenants** will have automatic LiteLLM integration
+- **Complete AI platform** with documents + web + multi-provider LLM
+
+The HR tenant will be able to:
+- Toggle web search on/off per conversation
+- Get real-time web data in AI responses
+- Combine document knowledge with live web information
+- Maintain privacy with no user tracking
 
 ## Support
 

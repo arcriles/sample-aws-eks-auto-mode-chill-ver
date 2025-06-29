@@ -1,10 +1,10 @@
 # Observability Setup
 
 > **📊 Monitoring Component**: Production-ready observability and cost management  
-> **Prerequisites**: ✅ Infrastructure Setup (Container Insights already enabled)
+> **Prerequisites**: ✅ Infrastructure Setup, ✅ Multi-Tenant OpenWebUI
 
 ## Setup Flow
-- **Previous**: Any component setup (can be done anytime)
+- **Previous**: [Multi-Tenant OpenWebUI](../setup-openwebui/)
 - **Current**: Observability & Cost Management
 - **Next**: Production deployment complete!
 

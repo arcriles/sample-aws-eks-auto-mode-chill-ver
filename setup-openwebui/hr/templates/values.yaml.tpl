@@ -80,7 +80,9 @@ extraEnvVars:
         name: "openwebui-oauth-credentials"
         key: "OPENID_PROVIDER_URL"
   
-  # Apache Tika configuration for document processing
+  # Document processing configuration - use existing Tika service
+  - name: "CONTENT_EXTRACTION_ENGINE"
+    value: "Tika"
   - name: "TIKA_SERVER_URL"
     value: "http://tika.${shared_namespace}.svc.cluster.local:9998"
   
@@ -128,10 +130,6 @@ resources:
   limits:
     cpu: "2000m"
     memory: "3Gi"
-
-# Enable Tika for automatic document processing
-tika:
-  enabled: true
 
 # Disable the embedded Ollama chart
 ollama:

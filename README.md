@@ -96,7 +96,7 @@ This project provides a modular AI platform with flexible deployment options:
 - **[Multi-Tenant OpenWebUI](./setup-openwebui/)** - AI chat interface with tenant isolation
 
 ### **🔄 Integration Components** (Enhances functionality)
-- **[LiteLLM Gateway](./setup-litellm/)** - Multi-provider AI access and cost tracking
+- **[LiteLLM Gateway](./setup-litellm/)** - Multi-provider AI access and cost tracking (deployed before OpenWebUI for automatic integration)
 - **[Web Search](./setup-searxng/)** - Privacy-focused search (HR tenant only)
 
 ### **📊 Monitoring Components** (Production ready)
@@ -110,10 +110,10 @@ Choose your deployment path based on your requirements:
 1. **Infrastructure Setup** (above) → 2. **[Custom Image](./build-custom-image/)** → 3. **[OpenWebUI](./setup-openwebui/)**
 
 ### **🏢 Enterprise Path** (Full featured platform)
-1. **Infrastructure Setup** (above) → 2. **[Custom Image](./build-custom-image/)** → 3. **[OpenWebUI](./setup-openwebui/)** → 4. **[LiteLLM](./setup-litellm/)** → 5. **[Observability](./setup-o11y/)**
+1. **Infrastructure Setup** (above) → 2. **[Custom Image](./build-custom-image/)** → 3. **[LiteLLM](./setup-litellm/)** → 4. **[OpenWebUI](./setup-openwebui/)** → 5. **[Observability](./setup-o11y/)**
 
 ### **🔍 HR Enhanced Path** (Includes web search)
-1. **Infrastructure Setup** (above) → 2. **[Custom Image](./build-custom-image/)** → 3. **[OpenWebUI](./setup-openwebui/)** (HR tenant) → 4. **[LiteLLM](./setup-litellm/)** → 5. **[Web Search](./setup-searxng/)** → 6. **[Observability](./setup-o11y/)**
+1. **Infrastructure Setup** (above) → 2. **[Custom Image](./build-custom-image/)** → 3. **[LiteLLM](./setup-litellm/)** → 4. **[Web Search](./setup-searxng/)** → 5. **[OpenWebUI](./setup-openwebui/)** (HR tenant) → 6. **[Observability](./setup-o11y/)**
 
 **� Start Here:** [Build Custom Image](./build-custom-image/)
 
@@ -145,6 +145,14 @@ This project includes a **multi-tenant OpenWebUI deployment** that supports thre
 - **Scalable Architecture**: Easy to add new tenants or modify existing ones
 - **Security**: Pod Identity for S3 access, AWS Secrets Manager integration
 - **Automated Setup**: Terraform generates all tenant-specific configurations
+- **🔄 Pre-configured LiteLLM Integration**: Automatic connection to LiteLLM gateway for multi-provider AI access
+
+### **Automatic LiteLLM Integration**
+Since LiteLLM is deployed first, OpenWebUI tenants automatically include:
+- **Immediate Model Access**: All LiteLLM models available in dropdown
+- **Seamless Connection**: Auto-configured service discovery
+- **Multi-Provider Support**: Local vLLM + external APIs ready to use
+- **No Manual Setup**: Zero configuration required
 
 The setup process includes automated creation of the pgvector extension per tenant through Kubernetes Jobs, eliminating manual database configuration. All credentials are securely managed using AWS Secrets Manager and the External Secrets Operator.
 
@@ -159,6 +167,8 @@ This project includes a LiteLLM deployment that provides:
 - AWS Secrets Manager for secure credential management
 - Cost tracking and rate limiting capabilities
 - Integration with existing vLLM service
+
+**🔄 Deployment Order**: LiteLLM is deployed **before OpenWebUI** to enable automatic integration and seamless model availability.
 
 LiteLLM acts as a proxy that can route requests to multiple LLM providers (including your local vLLM service and external APIs like OpenAI, Anthropic, etc.) through a single, consistent interface. This enables:
 
@@ -181,6 +191,11 @@ LiteLLM acts as a proxy that can route requests to multiple LLM providers (inclu
 - Centralized API key management
 - User authentication and authorization
 - Admin UI for configuration
+
+🤖 **Automatic OpenWebUI Integration**
+- OpenWebUI automatically discovers LiteLLM service
+- All models immediately available after OpenWebUI deployment
+- No manual configuration required
 
 For detailed setup instructions, proceed to [setup-litellm](./setup-litellm/)
 

@@ -10,7 +10,6 @@ metadata:
 spec:
   selector:
     app.kubernetes.io/name: cost-analyzer
-    app.kubernetes.io/component: cost-analyzer
   type: LoadBalancer
   loadBalancerClass: eks.amazonaws.com/nlb
   ports:

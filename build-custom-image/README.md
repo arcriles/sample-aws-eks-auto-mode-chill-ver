@@ -1,5 +1,13 @@
 # Custom OpenWebUI Image - GAR GPT Branding
 
+> **🎨 Core Component**: Required for branded AI chat interface  
+> **Prerequisites**: ✅ Infrastructure Setup
+
+## Setup Flow
+- **Previous**: [Infrastructure Setup](../README.md#quick-start)
+- **Current**: Custom Image Build
+- **Next**: [LiteLLM Gateway](../setup-litellm/)
+
 This directory contains the files and scripts needed to build a custom OpenWebUI image with GAR GPT branding.
 
 ## Private ECR Setup (Recommended)
@@ -350,4 +358,6 @@ COPY static/* /app/build/static/
 - ❌ No complex filesystem operations
 
 
-**Proceed over to [Setup OpenWebUI](./../setup-openwebui/)**
+**👉 Next Step: [Setup LiteLLM Gateway](../setup-litellm/)**
+
+LiteLLM is deployed before OpenWebUI to enable automatic integration and seamless model availability across all tenants.

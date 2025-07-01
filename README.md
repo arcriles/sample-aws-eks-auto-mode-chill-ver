@@ -1,4 +1,4 @@
-# Setting up EKS Auto Mode using Terraform
+# Set up Mutli-Tenant Open Webui on EKS Auto Mode using Terraform
 
 ## Table of Contents
 - [Overview](#overview)
@@ -13,25 +13,16 @@
 - [License and Disclaimer](#license-and-disclaimer)
 
 ## Overview
-[Amazon EKS Auto Mode](https://aws.amazon.com/eks/auto-mode/) simplifies Kubernetes cluster management on AWS. Key benefits include:
+[Amazon EKS Auto Mode](https://aws.amazon.com/eks/auto-mode/) simplifies Kubernetes cluster management on AWS. 
 
-🚀 **Simplified Management**
-- One-click cluster provisioning
-- Automated compute, storage, and networking
-- Seamless integration with AWS services
+This repository provides a template for deploying Multi Tenant Open Webui with LiteLLM, SearXNG and Apache Tika on EKS Auto Mode.
 
-⚡ **Workload Support**
-- Graviton instances for optimal price-performance
-- GPU acceleration for ML/AI workloads
-- Inferentia2 for cost-effective ML inference
-- Mixed architecture support
+## Architecture
 
-🔧 **Infrastructure Features**
-- Auto-scaling with Karpenter
-- Automated load balancer configuration
-- Cost optimization through node consolidation
+Following is a simplified architecture of this setup:
+![Simple Architecture](src/simplified-archi.png)
 
-This repository provides a production-ready template for deploying various workloads on EKS Auto Mode.
+Can take a look at [full architecture](./src/full-archi.png) for a better understanding of the full setup.
 
 ## Prerequisites
 
@@ -66,7 +57,21 @@ cp .env.tpl .env
 
 > **Note**: You can add models later by updating these files and running the update script in setup-litellm/
 
-3. **Deploy Cluster**:
+3. **S3 Backend Setup**:
+
+> **Important**: S3 bucket names must be globally unique across all AWS accounts. You need to replace `test-bucket-1273456` with your own unique bucket name.
+
+```bash
+# Create S3 bucket for Terraform state (replace with your unique bucket name)
+aws s3api create-bucket --bucket <YOUR-UNIQUE-BUCKET-NAME> --region ap-southeast-3 --create-bucket-configuration LocationConstraint=ap-southeast-3
+```
+
+After creating the bucket, update the bucket name in `terraform/versions.tf`:
+- Open `terraform/versions.tf`
+- Replace `test-bucket-1273456` with your unique bucket name in the backend configuration
+- The current placeholder is: `bucket = "test-bucket-1273456"`
+
+4. **Deploy Cluster**:
 ```bash
 # Navigate to Terraform directory
 cd terraform
@@ -81,47 +86,36 @@ $(terraform output -raw configure_kubectl)
 
 **👉 Continue to: [Build Custom Image](./build-custom-image/)**
 
-## Setup Flow
+## Component Overview
 
-This project follows a sequential setup process:
+This project provides a modular AI platform with flexible deployment options:
 
-1. **✅ Infrastructure Setup** (completed above)
-   - EKS Auto Mode cluster
-   - VPC, RDS, S3, ElastiCache
-   - External Secrets Operator
+### **🎨 Core Components** (Required)
+- **[Infrastructure Setup](#quick-start)** - EKS Auto Mode cluster, VPC, RDS, S3, ElastiCache
+- **[Custom Image Build](./build-custom-image/)** - GAR GPT branded OpenWebUI container
+- **[Multi-Tenant OpenWebUI](./setup-openwebui/)** - AI chat interface with tenant isolation
 
-2. **🎨 Build Custom Image**
-   - Create a customized OpenWebUI container image
-   - Remove default branding and logos for a clean, professional appearance
-   - Optimize image for your organization's requirements
-   - Essential step before deploying OpenWebUI services
+### **🔄 Integration Components** (Enhances functionality)
+- **[LiteLLM Gateway](./setup-litellm/)** - Multi-provider AI access and cost tracking (deployed before OpenWebUI for automatic integration)
+- **[Web Search](./setup-searxng/)** - Privacy-focused search (HR tenant only)
 
-3. **📋 Next: Multi-Tenant OpenWebUI Setup**
-   - Deploy OpenWebUI with multi-tenant architecture (HR, Legal, US)
-   - Separate S3 buckets and PostgreSQL databases per tenant
-   - Set up vector database with pgvector per tenant
-   - Set up shared Apache Tika service
-   - Configure shared vLLM service (optional)
+### **📊 Monitoring Components** (Production ready)
+- **[Observability](./setup-o11y/)** - Infrastructure monitoring and cost management
 
-4. **🔄 LiteLLM Setup**
-   - Deploy LiteLLM as a multi-provider gateway
-   - Configure Redis caching and PostgreSQL tracking
-   - Set up external access via ALB
+## Deployment Paths
 
-5. **🔍 SearXNG Setup**
-   - Deploy privacy-focused web search engine
-   - Enable web search capabilities in OpenWebUI
-   - Complete RAG pipeline with real-time web data
+Choose your deployment path based on your requirements:
 
-6. **📊 Observability Setup**
-   - Container Insights for EKS control plane monitoring
-   - Custom CloudWatch dashboards for ETCD and API server metrics
-   - Cost observability with uniform tagging strategy
-   - Optional KubeCost integration for Kubernetes-native cost monitoring
+### **🚀 Quick Start Path** (Minimal viable platform)
+1. **Infrastructure Setup** (above) → 2. **[Custom Image](./build-custom-image/)** → 3. **[OpenWebUI](./setup-openwebui/)**
 
-**👉 Next Steps:**
-- **First:** [Build Custom Image](./build-custom-image/)
-- **Then:** [Setup OpenWebUI](./setup-openwebui/)
+### **🏢 Enterprise Path** (Full featured platform)
+1. **Infrastructure Setup** (above) → 2. **[Custom Image](./build-custom-image/)** → 3. **[LiteLLM](./setup-litellm/)** → 4. **[OpenWebUI](./setup-openwebui/)** → 5. **[Observability](./setup-o11y/)**
+
+### **🔍 HR Enhanced Path** (Includes web search)
+1. **Infrastructure Setup** (above) → 2. **[Custom Image](./build-custom-image/)** → 3. **[LiteLLM](./setup-litellm/)** → 4. **[Web Search](./setup-searxng/)** → 5. **[OpenWebUI](./setup-openwebui/)** (HR tenant) → 6. **[Observability](./setup-o11y/)**
+
+**� Start Here:** [Build Custom Image](./build-custom-image/)
 
 ## Setup Open Webui
 
@@ -151,6 +145,14 @@ This project includes a **multi-tenant OpenWebUI deployment** that supports thre
 - **Scalable Architecture**: Easy to add new tenants or modify existing ones
 - **Security**: Pod Identity for S3 access, AWS Secrets Manager integration
 - **Automated Setup**: Terraform generates all tenant-specific configurations
+- **🔄 Pre-configured LiteLLM Integration**: Automatic connection to LiteLLM gateway for multi-provider AI access
+
+### **Automatic LiteLLM Integration**
+Since LiteLLM is deployed first, OpenWebUI tenants automatically include:
+- **Immediate Model Access**: All LiteLLM models available in dropdown
+- **Seamless Connection**: Auto-configured service discovery
+- **Multi-Provider Support**: Local vLLM + external APIs ready to use
+- **No Manual Setup**: Zero configuration required
 
 The setup process includes automated creation of the pgvector extension per tenant through Kubernetes Jobs, eliminating manual database configuration. All credentials are securely managed using AWS Secrets Manager and the External Secrets Operator.
 
@@ -165,6 +167,8 @@ This project includes a LiteLLM deployment that provides:
 - AWS Secrets Manager for secure credential management
 - Cost tracking and rate limiting capabilities
 - Integration with existing vLLM service
+
+**🔄 Deployment Order**: LiteLLM is deployed **before OpenWebUI** to enable automatic integration and seamless model availability.
 
 LiteLLM acts as a proxy that can route requests to multiple LLM providers (including your local vLLM service and external APIs like OpenAI, Anthropic, etc.) through a single, consistent interface. This enables:
 
@@ -187,6 +191,11 @@ LiteLLM acts as a proxy that can route requests to multiple LLM providers (inclu
 - Centralized API key management
 - User authentication and authorization
 - Admin UI for configuration
+
+🤖 **Automatic OpenWebUI Integration**
+- OpenWebUI automatically discovers LiteLLM service
+- All models immediately available after OpenWebUI deployment
+- No manual configuration required
 
 For detailed setup instructions, proceed to [setup-litellm](./setup-litellm/)
 
@@ -234,6 +243,7 @@ This project includes comprehensive observability setup that provides:
 - Custom CloudWatch dashboards for ETCD and API server metrics
 - Cost observability with uniform tagging strategy
 - Optional KubeCost integration for Kubernetes-native cost monitoring
+- Goldilocks VPA recommendations for resource optimization
 
 The observability setup monitors crucial control plane components to prevent issues like ETCD database lockdowns that can freeze entire clusters, based on real-world production incident prevention strategies.
 
@@ -251,23 +261,32 @@ The observability setup monitors crucial control plane components to prevent iss
 - Optional KubeCost EKS add-on for Kubernetes-native cost monitoring (free)
 - Optimized CloudWatch costs through selective log collection
 
+🎯 **Resource Optimization**
+- Goldilocks dashboard with VPA-powered recommendations
+- Right-sizing suggestions for CPU and memory allocation
+- Visual interface for resource optimization across all workloads
+- Safe VPA configuration (recommender only, no automatic mutations)
+
 🔍 **Key Monitoring Areas**
 - ETCD database size and performance (prevent lockdowns)
 - API server request latency and throughput
 - Admission controller performance metrics
 - Resource utilization and optimization opportunities
+- Workload right-sizing recommendations
 
 🚨 **Proactive Monitoring**
 - Foundation for critical alerting setup
 - Historical trend analysis capabilities
 - Performance bottleneck identification
 - Capacity planning insights
+- Resource waste identification
 
 ✨ **Simplified Setup**
 - Direct EKS add-on configuration with built-in Pod Identity
 - No external configuration files required
 - Streamlined IAM role management
 - Container Insights and Application Signals enabled by default
+- LoadBalancer access for Goldilocks dashboard (no port-forwarding)
 
 For detailed setup instructions and dashboard configuration, proceed to [setup-o11y](./setup-o11y/)
 

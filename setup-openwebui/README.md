@@ -1,6 +1,12 @@
 # Multi-Tenant Open WebUI Setup
 
-> **📋 Step 3 of 6**: This should be completed after the main Terraform infrastructure deployment.
+> **🎨 Core Component**: Required for AI chat functionality  
+> **Prerequisites**: ✅ Infrastructure Setup, ✅ Custom Image Build, ✅ LiteLLM Gateway
+
+## Setup Flow
+- **Previous**: [LiteLLM Gateway](../setup-litellm/) + [Web Search](../setup-searxng/) (optional)
+- **Current**: Multi-Tenant OpenWebUI Setup  
+- **Next**: [Observability](../setup-o11y/) - Recommended for production
 
 ## Multi-Tenant Architecture
 
@@ -28,10 +34,12 @@ This deployment supports **three isolated tenants** with shared infrastructure f
 
 Before deploying Open WebUI, ensure you have:
 1. ✅ **Completed**: Main Terraform infrastructure deployment ([see main README](../README.md))
-2. An EKS Auto Mode cluster running
-3. The AWS CLI configured with appropriate credentials
-4. kubectl configured to access your cluster
-5. **Custom GAR GPT image** available in ECR (pre-built and ready to use)
+2. ✅ **Completed**: LiteLLM gateway deployment ([see LiteLLM README](../setup-litellm/))
+3. ✅ **Optional**: SearXNG deployment for HR tenant ([see SearXNG README](../setup-searxng/))
+4. An EKS Auto Mode cluster running
+5. The AWS CLI configured with appropriate credentials
+6. kubectl configured to access your cluster
+7. **Custom GAR GPT image** available in ECR (pre-built and ready to use)
 
 ## Tenant Selection
 
@@ -215,6 +223,18 @@ All tenants share common services for cost optimization:
 
 - **Apache Tika**: `http://tika.vllm-inference.svc.cluster.local:9998`
 - **vLLM Service**: `http://vllm-service.vllm-inference.svc.cluster.local/v1`
+- **LiteLLM Gateway**: `http://litellm-service.litellm.svc.cluster.local:4000/v1`
+
+### Automatic LiteLLM Integration
+
+Since LiteLLM was deployed in the previous step, your OpenWebUI tenants automatically include:
+
+✅ **Immediate Model Access**: All LiteLLM models available in dropdown  
+✅ **Seamless Connection**: Auto-configured service discovery  
+✅ **Multi-Provider Support**: Local vLLM + external APIs ready to use  
+✅ **No Manual Setup**: Zero configuration required  
+✅ **Cost Tracking**: Usage automatically tracked through LiteLLM  
+✅ **Consistent Experience**: All tenants get identical LiteLLM integration
 
 ## Accessing Your Tenant
 
@@ -328,16 +348,29 @@ Remember to setup Tika on each Tenant Open Webui.
 
 ## Next Steps
 
-🔄 **Continue to Step 4**: Once your tenant's OpenWebUI is successfully deployed and verified, proceed to set up LiteLLM as a shared multi-provider gateway.
+🎉 **Multi-Tenant OpenWebUI Setup Complete!** You now have a fully functional AI platform with:
 
-**👉 Next: [Setup LiteLLM](../setup-litellm/)**
+- **✅ Multi-Tenant Architecture**: HR, Legal, and US tenants with complete isolation
+- **✅ Automatic LiteLLM Integration**: Multi-provider AI access ready to use
+- **✅ Document Processing**: S3 storage, PostgreSQL vectors, Apache Tika
+- **✅ Web Search Ready**: HR tenant can access SearXNG (if deployed)
+- **✅ Custom Branding**: GAR GPT branded interface
+- **✅ Enterprise Security**: AWS Secrets Manager, Pod Identity, tenant isolation
 
-LiteLLM provides shared services for all tenants:
-- Multi-provider LLM routing (local vLLM + external APIs)
-- Cost tracking and usage monitoring across tenants
-- Centralized API key management
-- Redis caching for improved performance
+### What's Available Now:
 
-**👉 For HR Tenant: [Setup SearXNG](../setup-searxng/)**
+🤖 **AI Chat Interface**
+- Custom GAR GPT branding across all tenants
+- Automatic LiteLLM model discovery and access
+- Document upload and processing capabilities
+- Web search integration (HR tenant only)
 
-If you deployed the HR tenant, you can optionally set up SearXNG for web search capabilities.
+📊 **Enterprise Features**
+- Complete tenant isolation with shared cost optimization
+- Automatic cost tracking through LiteLLM
+- Secure credential management
+- Scalable multi-tenant architecture
+
+**👉 Final Step: [Setup Observability](../setup-o11y/)**
+
+Complete your production-ready AI platform with comprehensive monitoring and cost observability.

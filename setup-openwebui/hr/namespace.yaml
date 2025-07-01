@@ -2,3 +2,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: hr-webui
+  labels:
+    name: hr-webui
+    tenant: hr
+    app.kubernetes.io/part-of: openwebui-platform

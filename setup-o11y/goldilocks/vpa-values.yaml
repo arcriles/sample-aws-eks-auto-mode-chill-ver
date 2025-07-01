@@ -1,0 +1,23 @@
+# Minimal VPA Configuration for Goldilocks
+# Only enables the recommender component for safety
+# Disables updater and admission controller to avoid cluster-wide mutations
+
+recommender:
+  enabled: true
+  extraArgs:
+    pod-recommendation-min-cpu-millicores: 15
+    pod-recommendation-min-memory-mb: 100
+    v: "4"
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "500Mi"
+    limits:
+      cpu: "200m"
+      memory: "1Gi"
+
+updater:
+  enabled: false  # Disabled for safety - no automatic pod updates
+
+admissionController:
+  enabled: false  # Disabled for safety - no admission webhook mutations

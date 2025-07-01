@@ -1,10 +1,28 @@
 # LiteLLM Setup
 
-> **🔄 Step 4 of 5**: This should be completed after OpenWebUI setup is finished.
+> **🔄 Integration Component**: Multi-provider AI gateway deployed before OpenWebUI for automatic integration  
+> **Prerequisites**: ✅ Infrastructure Setup, ✅ Custom Image Build
+
+## Setup Flow
+- **Previous**: [Custom Image Build](../build-custom-image/)
+- **Current**: LiteLLM Gateway Setup
+- **Next**: Choose your path:
+  - **Optional**: [Web Search](../setup-searxng/) - HR tenant only, then [Multi-Tenant OpenWebUI](../setup-openwebui/)
+  - **Direct**: [Multi-Tenant OpenWebUI](../setup-openwebui/)
 
 ## Overview
 
 This directory contains the configuration files and deployment manifests for setting up LiteLLM as a multi-provider AI gateway on EKS Auto Mode. LiteLLM provides a unified interface to access multiple LLM providers, cost tracking, rate limiting, and caching capabilities.
+
+## Why LiteLLM Comes First
+
+LiteLLM is deployed **before OpenWebUI** to enable **automatic integration**:
+
+✅ **Automatic Connection**: OpenWebUI automatically discovers and connects to LiteLLM service  
+✅ **Pre-configured Models**: All LiteLLM models are immediately available in OpenWebUI  
+✅ **Seamless Setup**: No manual configuration required in OpenWebUI admin panel  
+✅ **Consistent Configuration**: All tenants get the same LiteLLM integration automatically  
+✅ **Zero Downtime**: Models are ready when OpenWebUI starts up
 
 ## Architecture
 
@@ -22,7 +40,10 @@ LiteLLM is deployed with the following components:
 Before deploying LiteLLM, ensure you have:
 
 1. ✅ **Completed**: Main Terraform infrastructure deployment ([see main README](../README.md))
-2. ✅ **Completed**: OpenWebUI setup ([see OpenWebUI README](../setup-openwebui/))
+2. ✅ **Completed**: Custom image build ([see Custom Image README](../build-custom-image/))
+3. ✅ **Completed**: Shared components setup (storage class, ClusterSecretStore, Apache Tika)
+
+> **Note**: LiteLLM is deployed **before** OpenWebUI tenants to enable automatic integration. The shared components from the OpenWebUI setup directory should be deployed first.
 
 ## Deployment Steps
 
@@ -208,18 +229,26 @@ terraform destroy -target=aws_secretsmanager_secret.litellm_api_keys
 - **Multi-Provider Access**: Route requests to different LLM providers
 - **Cost Tracking**: Monitor usage and costs across providers
 - **Usage Analytics**: Track and analyze API usage
+- **🤖 Ready for OpenWebUI Integration**: Service is ready for automatic discovery
 
 ## Next Steps
 
-🔄 **Continue to Step 5**: Complete your AI platform with web search capabilities.
+Choose your deployment path:
 
-**👉 Next: [Setup SearXNG](../setup-searxng/)**
+### **Option 1: Direct to OpenWebUI** (Recommended for most users)
+**👉 Next: [Setup Multi-Tenant OpenWebUI](../setup-openwebui/)**
 
-SearXNG will provide:
-- Privacy-focused web search integration
-- Enhanced RAG capabilities with real-time web data
-- Seamless integration with OpenWebUI
-- Complete AI platform with documents + web + LLM
+OpenWebUI will automatically:
+- Discover the LiteLLM service
+- Configure all models for immediate use
+- Enable multi-provider AI access across all tenants
+
+### **Option 2: Add Web Search First** (HR Enhanced Path)
+**👉 Next: [Setup SearXNG](../setup-searxng/)** → Then [Setup OpenWebUI](../setup-openwebui/)
+
+This path adds web search capabilities for the HR tenant before deploying OpenWebUI.
+
+Both paths result in OpenWebUI tenants with automatic LiteLLM integration - no manual configuration required!
 
 ## Support
 

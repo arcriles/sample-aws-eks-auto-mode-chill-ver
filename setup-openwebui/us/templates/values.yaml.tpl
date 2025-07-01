@@ -85,12 +85,25 @@ extraEnvVars:
         name: "openwebui-oauth-credentials"
         key: "OPENID_PROVIDER_URL"
   
-  # Apache Tika configuration for document processing
+  # Document processing configuration - use existing Tika service
+  - name: "CONTENT_EXTRACTION_ENGINE"
+    value: "Tika"
   - name: "TIKA_SERVER_URL"
     value: "http://tika.${shared_namespace}.svc.cluster.local:9998"
   
+  # LiteLLM API Key configuration - using OPENAI_API_KEYS with proper index mapping
+  # The secret contains: dummy-pipeline-key;actual-litellm-key;dummy-vllm-key
+  - name: "OPENAI_API_KEYS"
+    valueFrom:
+      secretKeyRef:
+        name: "litellm-master-key"
+        key: "OPENAI_API_KEYS"
+  
 
-openaiBaseApiUrls: ["http://vllm-service.vllm-inference.svc.cluster.local/v1"]
+openaiBaseApiUrls: [
+  "http://litellm-service.litellm.svc.cluster.local:4000/v1",
+  "http://vllm-service.vllm-inference.svc.cluster.local/v1"
+]
 
 # Branding assets are now embedded in the custom image v0.0.2
 # No ConfigMap volume mounts needed

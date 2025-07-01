@@ -1,0 +1,130 @@
+# Network Policies for SearXNG Tenant Isolation
+# Ensures only HR tenant can access SearXNG service
+
+---
+# 1. Default Deny All Ingress to SearXNG
+# This policy blocks all incoming traffic to SearXNG pods by default
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: searxng-default-deny
+  namespace: vllm-inference
+  labels:
+    app.kubernetes.io/name: searxng
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: searxng
+  policyTypes:
+  - Ingress
+
+---
+# 2. Allow HR Tenant Access to SearXNG
+# This policy explicitly allows traffic from hr-webui namespace to SearXNG
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: searxng-allow-hr-tenant
+  namespace: vllm-inference
+  labels:
+    app.kubernetes.io/name: searxng
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: searxng
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow traffic from HR tenant namespace
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: hr-webui
+    ports:
+    - protocol: TCP
+      port: 8080
+
+---
+# 3. Allow Internal Health Checks and Monitoring
+# This policy allows Kubernetes system components to perform health checks
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: searxng-allow-system-access
+  namespace: vllm-inference
+  labels:
+    app.kubernetes.io/name: searxng
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: searxng
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow traffic from kube-system namespace (for health checks)
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: TCP
+      port: 8080
+  # Allow traffic from same namespace (for Redis communication)
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: vllm-inference
+    ports:
+    - protocol: TCP
+      port: 8080
+
+---
+# 4. Explicit Deny for Legal and US Tenants
+# This policy explicitly blocks traffic from legal-webui and us-webui namespaces
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: searxng-deny-other-tenants
+  namespace: vllm-inference
+  labels:
+    app.kubernetes.io/name: searxng
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: searxng
+  policyTypes:
+  - Ingress
+  # This policy has no ingress rules, effectively denying all traffic
+  # from namespaces not explicitly allowed by other policies
+
+---
+# 5. Redis Access Policy for SearXNG
+# Allow SearXNG to communicate with its Redis cache
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: searxng-redis-access
+  namespace: vllm-inference
+  labels:
+    app.kubernetes.io/name: searxng-redis
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: redis
+      app.kubernetes.io/instance: searxng
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow SearXNG pods to access Redis
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: searxng
+    ports:
+    - protocol: TCP
+      port: 6379

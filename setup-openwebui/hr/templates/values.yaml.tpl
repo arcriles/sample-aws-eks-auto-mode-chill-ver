@@ -95,13 +95,19 @@ extraEnvVars:
         name: "openwebui-oauth-credentials"
         key: "OPENID_PROVIDER_URL"
   
-  # Apache Tika configuration for document processing
+  # Document processing configuration - use existing Tika service
+  - name: "CONTENT_EXTRACTION_ENGINE"
+    value: "Tika"
   - name: "TIKA_SERVER_URL"
     value: "http://tika.${shared_namespace}.svc.cluster.local:9998"
   
   # SearXNG Web Search Configuration (Step 5 integration)
+  - name: "ENABLE_WEB_SEARCH"
+    value: "True"
   - name: "ENABLE_RAG_WEB_SEARCH"
     value: "True"
+  - name: "WEB_SEARCH_ENGINE"
+    value: "searxng"
   - name: "RAG_WEB_SEARCH_ENGINE"
     value: "searxng"
   - name: "RAG_WEB_SEARCH_RESULT_COUNT"
@@ -111,8 +117,19 @@ extraEnvVars:
   - name: "SEARXNG_QUERY_URL"
     value: "http://searxng.${shared_namespace}.svc.cluster.local:8080/search?q=<query>&format=json"
   
+  # LiteLLM API Key configuration - using OPENAI_API_KEYS with proper index mapping
+  # The secret contains: dummy-pipeline-key;actual-litellm-key;dummy-vllm-key
+  - name: "OPENAI_API_KEYS"
+    valueFrom:
+      secretKeyRef:
+        name: "litellm-master-key"
+        key: "OPENAI_API_KEYS"
+  
 
-openaiBaseApiUrls: ["http://vllm-service.vllm-inference.svc.cluster.local/v1"]
+openaiBaseApiUrls: [
+  "http://litellm-service.litellm.svc.cluster.local:4000/v1",
+  "http://vllm-service.vllm-inference.svc.cluster.local/v1"
+]
 
 # Branding assets are now embedded in the custom image v0.0.2
 # No ConfigMap volume mounts needed

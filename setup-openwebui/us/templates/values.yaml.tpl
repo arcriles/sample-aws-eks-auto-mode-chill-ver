@@ -47,6 +47,11 @@ extraEnvVars:
       configMapKeyRef:
         name: "openwebui-oauth-config"
         key: "OAUTH_SCOPES"
+  - name: "OAUTH_USERNAME_CLAIM"
+    valueFrom:
+      configMapKeyRef:
+        name: "openwebui-oauth-config"
+        key: "OAUTH_USERNAME_CLAIM"
   - name: "OAUTH_CLIENT_ID"
     valueFrom:
       configMapKeyRef:

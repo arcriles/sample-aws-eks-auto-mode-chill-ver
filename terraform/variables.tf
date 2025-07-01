@@ -26,7 +26,7 @@ variable "vpc_cidr" {
 variable "enable_kubecost" {
   description = "Enable KubeCost EKS add-on for Kubernetes-native cost monitoring (free standard bundle)"
   type        = bool
-  default     = false
+  default     = true
 }
 
 # Multi-tenant configuration

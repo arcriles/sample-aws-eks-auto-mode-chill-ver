@@ -132,39 +132,9 @@
      temperature: 0.1
 
 #AWS BEDROOK
-
- - model_name: anthropic.claude-3-5-sonnet
+ - model_name: bedrock-claude-3-5-sonnet
    litellm_params:
-     model: anthropic.claude-3-5-sonnet-20240620-v1:0
+     model: bedrock/anthropic.claude-3-5-sonnet-20240620-v1:0
      aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
      aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
      aws_region_name: os.environ/AWS_REGION_NAME
-
- - model_name: anthropic.claude-sonnet-4
-   litellm_params:
-     model: anthropic.claude-sonnet-4-20250514-v1:0
-     aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
-     aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
-     aws_region_name: os.environ/AWS_REGION_NAME
-
- - model_name: anthropic.claude-3-7
-   litellm_params:
-     model: anthropic.claude-3-7-sonnet-20250219-v1:0
-     aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
-     aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
-     aws_region_name: os.environ/AWS_REGION_NAME
-
- - model_name: amazon.nova-pro
-   litellm_params:
-     model: amazon.nova-pro-v1:0
-     aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
-     aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
-     aws_region_name: os.environ/AWS_REGION_NAME
-
- - model_name: amazon.nova-premier
-   litellm_params:
-     model: amazon.nova-premier-v1:0
-     aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
-     aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
-     aws_region_name: os.environ/AWS_REGION_NAME
-

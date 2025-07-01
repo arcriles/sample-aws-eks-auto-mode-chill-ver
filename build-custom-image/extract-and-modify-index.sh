@@ -121,18 +121,18 @@ cat > branding-scripts.html << 'EOF'
         });
 
         // Add new favicon link
-        var link = document.createElement('link');
-        link.rel = 'icon';
-        link.type = 'image/png';
-        link.href = '/static/gar-logo.png';
-        document.head.appendChild(link);
+				var link = document.createElement('link');
+				link.rel = 'icon';
+				link.type = 'image/png';
+				link.href = 'https://www.goldenagri.com.sg/wp-content/uploads/2016/01/cropped-favicon-2-32x32.png';
+				document.head.appendChild(link);
 
-        // Optional: Also set the shortcut icon for older browsers
-        var shortcutLink = document.createElement('link');
-        shortcutLink.rel = 'shortcut icon';
-        shortcutLink.type = 'image/png';
-        shortcutLink.href = '/static/gar-logo.png';
-        document.head.appendChild(shortcutLink);
+				// Optional: Also set the shortcut icon for older browsers
+				var shortcutLink = document.createElement('link');
+				shortcutLink.rel = 'shortcut icon';
+				shortcutLink.type = 'image/png';
+				shortcutLink.href = 'https://www.goldenagri.com.sg/wp-content/uploads/2016/01/cropped-favicon-2-32x32.png';
+				document.head.appendChild(shortcutLink);
     })();
 </script>
 

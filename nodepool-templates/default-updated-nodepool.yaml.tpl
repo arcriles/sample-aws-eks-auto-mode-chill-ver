@@ -3,7 +3,7 @@ kind: NodePool
 metadata:
   labels:
     app.kubernetes.io/managed-by: eks
-  name: general-purpose
+  name: general-purpose-scheduled
 spec:
   weight: 10
   disruption:

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openwebui-oauth-config
+  namespace: pr-webui
+data:
+  # Non-sensitive OAuth configuration - replace with your actual values
+  ENABLE_OAUTH_SIGNUP: "true"
+  OAUTH_PROVIDER_NAME: "Sinarmas (SSO)"
+  OAUTH_SCOPES: "openid email profile unique_name allatclaims"
+  OAUTH_CLIENT_ID: "ae070b93-8788-4f5c-be92-e56b009f34fa"
+  MICROSOFT_CLIENT_ID: "2371c528-5654-43ee-bfa1-11fa9625ef6e"
+  MICROSOFT_CLIENT_TENANT_ID: "d0b9a654-0ca2-4af1-9528-b5edaab25c75"
+  OAUTH_MERGE_ACCOUNTS_BY_EMAIL: "true"
+  OAUTH_UPDATE_PICTURE_ON_LOGIN: "true"
+  OAUTH_USERNAME_CLAIM: "unique_name"

@@ -49,5 +49,10 @@ variable "tenants" {
       name      = "us"
       namespace = "us-webui"
     }
+    procurement = {
+      name      = "procure"
+      namespace = "pr-webui"
+    }
+
   }
 }

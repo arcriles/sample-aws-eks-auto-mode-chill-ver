@@ -68,10 +68,11 @@ resource "local_file" "setup_tenant_oauth_secret" {
 resource "local_file" "setup_tenant_values" {
   for_each = var.tenants
   content = templatefile("${path.module}/../setup-openwebui/${each.value.name}/templates/values.yaml.tpl", {
-    s3_bucket_name    = aws_s3_bucket.openwebui_docs[each.key].id
+    s3_bucket_name   = aws_s3_bucket.openwebui_docs[each.key].id
     region           = var.region
     rds_endpoint     = aws_db_instance.postgres.endpoint
     shared_namespace = "vllm-inference"
+    tenant_name      = each.key
   })
   filename = "${path.module}/../setup-openwebui/${each.value.name}/values.yaml"
 }

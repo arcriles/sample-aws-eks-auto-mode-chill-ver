@@ -3,7 +3,7 @@
 # Use custom GAR GPT branded image with minimal approach (database compatible)
 image:
   repository: 513158237195.dkr.ecr.ap-southeast-3.amazonaws.com/openwebui/gar-gpt
-  tag: v0.1.0
+  tag: v0.6.21
   pullPolicy: IfNotPresent
 
 # Configure persistence to use S3
@@ -123,14 +123,20 @@ resources:
 ollama:
   enabled: false
 
-# Disable Pipelines persistence to avoid PVC Multi-Attach errors
+# Enable Pipelines persistence
 pipelines:
   persistence:
-    enabled: false
+    enabled: true
+    storageClass: "auto-ebs-sc"
+    accessModes: ["ReadWriteOnce"]
+    size: "10Gi"  
+  serviceAccount:
+    enable: true
+    name: "pipelines-${tenant_name}-sa"
   resources:
     requests:
-      cpu: "200m"
+      cpu: "50m"
       memory: "128Mi"
     limits:
-      cpu: "500m"
-      memory: "256Mi"
+      cpu: "200m"
+      memory: "1024Mi"

@@ -3,7 +3,7 @@
 # Use custom GAR GPT branded image with minimal approach (database compatible)
 image:
   repository: 513158237195.dkr.ecr.ap-southeast-3.amazonaws.com/openwebui/gar-gpt
-  tag: v0.1.0
+  tag: v0.6.21
   pullPolicy: IfNotPresent
 
 # Configure persistence to use S3

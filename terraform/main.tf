@@ -1,5 +1,8 @@
 provider "aws" {
   region = var.region
+  default_tags {
+    tags = local.tags
+  }
 }
 
 # This provider is required for ECR to authenticate with public repos. Please note ECR authentication requires us-east-1 as region hence its hardcoded below.
@@ -7,6 +10,11 @@ provider "aws" {
 provider "aws" {
   alias  = "ecr"
   region = "us-east-1"
+}
+
+provider "aws" {
+  alias  = "southeast-2"
+  region = "ap-southeast-2"
 }
 
 provider "helm" {

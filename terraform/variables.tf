@@ -56,3 +56,10 @@ variable "tenants" {
 
   }
 }
+
+# S3 BDA configuration
+variable "s3_bucket_bda" {
+  description = "S3 bucket for BDA"
+  type        = string
+  default     = "bda-multimodal-rag"
+}

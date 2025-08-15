@@ -1,0 +1,28 @@
+---
+# Legal Tenant PersistentVolume
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: s3-pv-legal-pipelines
+  labels:
+    app.kubernetes.io/name: mountpoint-s3-csi
+    app.kubernetes.io/component: persistent-volume
+    tenant: legal
+spec:
+  capacity:
+    storage: 10Gi # Ignored, required
+  accessModes:
+    - ReadWriteMany # Supported options: ReadWriteMany / ReadOnlyMany
+  storageClassName: "" # Required for static provisioning
+  claimRef: # To ensure no other PVCs can claim this PV
+    namespace: legal-webui # Namespace is required
+    name: open-webui-pipelines # Name of the PVC created by Helm
+  mountOptions:
+    - allow-delete
+    - region ap-southeast-3
+  csi:
+    driver: s3.csi.aws.com # Required
+    volumeHandle: s3-csi-legal-pipelines-volume # Must be unique
+    volumeAttributes:
+      bucketName: automode-cluster-legal-pipelines-storage
+---

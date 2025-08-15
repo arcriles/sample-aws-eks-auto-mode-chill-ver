@@ -3,7 +3,7 @@
 # Use custom GAR GPT branded image with minimal approach (database compatible)
 image:
   repository: 513158237195.dkr.ecr.ap-southeast-3.amazonaws.com/openwebui/gar-gpt
-  tag: v0.1.0
+  tag: v0.6.21
   pullPolicy: IfNotPresent
 
 # Configure persistence to use S3
@@ -37,16 +37,6 @@ extraEnvVars:
       configMapKeyRef:
         name: "openwebui-oauth-config"
         key: "ENABLE_OAUTH_SIGNUP"
-  - name: "OAUTH_MERGE_ACCOUNTS_BY_EMAIL"
-    valueFrom:
-      configMapKeyRef:
-        name: "openwebui-oauth-config"
-        key: "OAUTH_MERGE_ACCOUNTS_BY_EMAIL"
-  - name: "OAUTH_UPDATE_PICTURE_ON_LOGIN"
-    valueFrom:
-      configMapKeyRef:
-        name: "openwebui-oauth-config"
-        key: "OAUTH_UPDATE_PICTURE_ON_LOGIN"
   - name: "OAUTH_PROVIDER_NAME"
     valueFrom:
       configMapKeyRef:
@@ -101,22 +91,6 @@ extraEnvVars:
   - name: "TIKA_SERVER_URL"
     value: "http://tika.${shared_namespace}.svc.cluster.local:9998"
   
-  # SearXNG Web Search Configuration (Step 5 integration)
-  - name: "ENABLE_WEB_SEARCH"
-    value: "True"
-  - name: "ENABLE_RAG_WEB_SEARCH"
-    value: "True"
-  - name: "WEB_SEARCH_ENGINE"
-    value: "searxng"
-  - name: "RAG_WEB_SEARCH_ENGINE"
-    value: "searxng"
-  - name: "RAG_WEB_SEARCH_RESULT_COUNT"
-    value: "5"
-  - name: "RAG_WEB_SEARCH_CONCURRENT_REQUESTS"
-    value: "10"
-  - name: "SEARXNG_QUERY_URL"
-    value: "http://searxng.${shared_namespace}.svc.cluster.local:8080/search?q=<query>&format=json"
-  
   # LiteLLM API Key configuration - using OPENAI_API_KEYS with proper index mapping
   # The secret contains: dummy-pipeline-key;actual-litellm-key;dummy-vllm-key
   - name: "OPENAI_API_KEYS"
@@ -137,11 +111,10 @@ openaiBaseApiUrls: [
 # extraVolumeMounts: []
 
 # Configure resource limits to prevent OOM issues
-# Procurement has additional SearXNG features requiring more resources
 resources:
   requests:
     cpu: "750m"
-    memory: "1.5Gi"
+    memory: "1Gi"
   limits:
     cpu: "2000m"
     memory: "3Gi"

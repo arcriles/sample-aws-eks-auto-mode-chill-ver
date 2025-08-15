@@ -119,3 +119,20 @@ resource "aws_secretsmanager_secret_version" "oauth_credentials_version" {
     OPENID_PROVIDER_URL = "https://dummy-openid-provider-url/openid-configuration"
   })
 }
+
+resource "aws_secretsmanager_secret" "bda_access_credentials" {
+  name = "bda-access-credentials"
+  recovery_window_in_days = 0
+
+  tags = {
+	Name = "${var.name}-oauth-credentials"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "bda_access_credentials_version" {
+  secret_id = aws_secretsmanager_secret.bda_access_credentials.id
+  secret_string = jsonencode({
+    username = "dummy-aws-access-key-id"
+    password = "dummy-aws-secret-access-key"
+  })
+}

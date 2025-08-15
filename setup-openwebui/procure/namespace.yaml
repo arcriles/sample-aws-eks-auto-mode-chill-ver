@@ -1,8 +1,8 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: hr-webui
+  name: pr-webui
   labels:
-    name: hr-webui
-    tenant: hr
+    name: pr-webui
+    tenant: procurement
     app.kubernetes.io/part-of: openwebui-platform

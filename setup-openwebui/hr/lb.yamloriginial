@@ -7,21 +7,12 @@ metadata:
     service.beta.kubernetes.io/aws-load-balancer-type: external
     service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
     service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
-    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: arn:aws:acm:ap-southeast-3:513158237195:certificate/7eb6e65e-9c74-42be-a0ae-6fc648603058
-    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
-    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
 spec:
   selector:
     app.kubernetes.io/component: open-webui
   type: LoadBalancer
   loadBalancerClass: eks.amazonaws.com/nlb
   ports:
-    - name: http
-      protocol: TCP
-      port: 80
-      targetPort: 8080
-    - name: https
-      protocol: TCP
-      port: 443
-      targetPort: 8080
-
+  - protocol: TCP
+    port: 80
+    targetPort: 8080

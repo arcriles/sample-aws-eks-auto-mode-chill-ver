@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gar-webui
+  labels:
+    name: gar-webui
+    tenant: gar
+    app.kubernetes.io/part-of: openwebui-platform

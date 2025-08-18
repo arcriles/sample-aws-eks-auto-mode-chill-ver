@@ -14,7 +14,7 @@ spec:
   data:
   - secretKey: url
     remoteRef:
-      key: "${secret_name}"
+      key: "${postgres_secret_name}"
       property: connectionString
 
 ---

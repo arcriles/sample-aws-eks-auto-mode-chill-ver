@@ -21,5 +21,9 @@ module "eks" {
     enabled    = true
     node_pools = ["general-purpose"]
   }
-  tags = local.tags
+  tags = merge(local.tags, {
+    Component = "compute"
+    Service   = "eks"
+    "kubernetes.io/cluster/${var.name}" = "owned"
+  })
 }

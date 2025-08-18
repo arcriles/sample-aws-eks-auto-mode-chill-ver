@@ -37,23 +37,26 @@ variable "tenants" {
     namespace = string
   }))
   default = {
-    legal = {
-      name      = "legal"
-      namespace = "legal-webui"
+    # legal = {
+    #   name      = "legal"
+    #   namespace = "legal-webui"
+    # }
+    gar = {
+      name      = "gar"
+      namespace = "gar-webui"
     }
     hr = {
       name      = "hr"
       namespace = "hr-webui"
     }
-    us = {
-      name      = "us"
-      namespace = "us-webui"
-    }
-    procurement = {
-      name      = "procure"
-      namespace = "pr-webui"
-    }
-
+    # us = {
+    #   name      = "us"
+    #   namespace = "us-webui"
+    # }
+    # procurement = {
+    #   name      = "procure"
+    #   namespace = "pr-webui"
+    # }
   }
 }
 

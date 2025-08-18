@@ -54,5 +54,9 @@ locals {
 
   tags = {
     Blueprint  = var.name
+    Environment = var.name
+    Owner       = "ITDD-ITSMKube-SharePoint"
+    Project     = "gar-gpt"
+    CostCenter  = "engineering"
   }
 }

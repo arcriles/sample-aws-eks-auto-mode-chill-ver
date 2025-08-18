@@ -1,6 +1,6 @@
 module "pipelines_pod_identity" {
   source = "terraform-aws-modules/eks-pod-identity/aws"
-  name = "pipelines-legal-sa-role"
+  name = "pipelines-gar-sa-role"
   attach_custom_policy = true
   policy_statements = [
     {
@@ -26,8 +26,8 @@ module "pipelines_pod_identity" {
   ]
   associations = {
     open-webui-pipelines = {
-      service_account = "pipelines-legal-sa"
-      namespace       = "legal-webui"
+      service_account = "pipelines-gar-sa"
+      namespace       = "gar-webui"
       cluster_name    = module.eks.cluster_name
     }
   }

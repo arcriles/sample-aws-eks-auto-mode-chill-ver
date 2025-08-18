@@ -10,6 +10,7 @@ metadata:
     service.beta.kubernetes.io/aws-load-balancer-ssl-cert: arn:aws:acm:ap-southeast-3:513158237195:certificate/7eb6e65e-9c74-42be-a0ae-6fc648603058
     service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
     service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
+    service.beta.kubernetes.io/aws-load-balancer-additional-resource-tags: "Blueprint=automode-cluster,Environment=automode-cluster,Owner=ITDD-ITSMKube-SharePoint,Project=gar-gpt,CostCenter=engineering,Component=networking,Service=openwebui,Tenant=hr"
 spec:
   selector:
     app.kubernetes.io/component: open-webui

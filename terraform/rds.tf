@@ -13,10 +13,12 @@ resource "aws_secretsmanager_secret" "postgres_credentials" {
   description = "PostgreSQL credentials for OpenWebUI ${each.value.name} tenant"
   recovery_window_in_days = 0
   
-  tags = {
-    Name   = "${var.name}-postgres-credentials-${each.value.name}"
-    Tenant = each.value.name
-  }
+  tags = merge(local.tags, {
+    Name      = "${var.name}-postgres-credentials-${each.value.name}"
+    Tenant    = each.value.name
+    Component = "security"
+    Service   = "openwebui"
+  })
 }
 
 # Store the credentials in the secrets - separate database per tenant
@@ -58,9 +60,11 @@ resource "aws_security_group" "rds" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = "${var.name}-rds-sg"
-  }
+  tags = merge(local.tags, {
+    Name      = "${var.name}-rds-sg"
+    Component = "security"
+    Service   = "database"
+  })
 }
 
 # DB Subnet Group
@@ -68,9 +72,11 @@ resource "aws_db_subnet_group" "rds" {
   name       = "${var.name}-rds-subnet-group"
   subnet_ids = module.vpc.private_subnets
 
-  tags = {
-    Name = "${var.name}-rds-subnet-group"
-  }
+  tags = merge(local.tags, {
+    Name      = "${var.name}-rds-subnet-group"
+    Component = "networking"
+    Service   = "database"
+  })
 }
 
 # DB Parameter Group for PostgreSQL with enhanced logging
@@ -95,9 +101,11 @@ resource "aws_db_parameter_group" "postgres_vector" {
     value = "1"
   }
 
-  tags = {
-    Name = "${var.name}-postgres-vector"
-  }
+  tags = merge(local.tags, {
+    Name      = "${var.name}-postgres-vector"
+    Component = "database"
+    Service   = "openwebui"
+  })
 }
 
 # IAM role for RDS enhanced monitoring
@@ -129,7 +137,7 @@ resource "aws_db_instance" "postgres" {
   identifier             = "${var.name}-postgres"
   engine                 = "postgres"
   engine_version         = "15.13"
-  instance_class         = "db.m6g.large"
+  instance_class         = "db.t4g.large"
   allocated_storage      = 20
   max_allocated_storage  = 100
   storage_type           = "gp3"
@@ -160,10 +168,12 @@ resource "aws_db_instance" "postgres" {
   monitoring_role_arn = aws_iam_role.rds_enhanced_monitoring.arn
   
   apply_immediately       = true
-  
-  tags = {
+
+  tags = merge(local.tags, {
     Name = "${var.name}-postgres"
-  }
+    Component = "database"
+    Service   = "openwebui"
+  })
 }
 
 # IAM policies for Secrets Manager access - one per tenant

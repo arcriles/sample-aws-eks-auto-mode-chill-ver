@@ -7,11 +7,13 @@ resource "aws_s3_bucket" "openwebui_docs" {
   
   bucket_prefix = "${var.name}-webui-docs-${each.value.name}-"
   force_destroy = true
-  
-  tags = {
+
+  tags = merge(local.tags, {
     Name   = "${var.name}-webui-docs-${each.value.name}"
     Tenant = each.value.name
-  }
+    Component   = "storage"
+    DataClass   = "documents"
+  })
 }
 
 # Block public access to the S3 buckets
@@ -144,10 +146,12 @@ module "openwebui_pod_identity" {
     }
   }
 
-  tags = {
+  tags = merge(local.tags, {
     Environment = var.name
     Tenant      = each.value.name
-  }
+    Component   = "security"
+    Service     = "openwebui"
+  })
 }
 
 # Output the S3 bucket names and Pod Identity details - per tenant

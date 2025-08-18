@@ -16,4 +16,4 @@ spec:
           kubernetes.io/metadata.name: hr-webui
     - namespaceSelector:
         matchLabels:
-          kubernetes.io/metadata.name: legal-webui
+          kubernetes.io/metadata.name: general-webui

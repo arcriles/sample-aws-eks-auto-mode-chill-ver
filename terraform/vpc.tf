@@ -12,16 +12,22 @@ module "vpc" {
   enable_nat_gateway = true
   single_nat_gateway = true
 
-  public_subnet_tags = {
-    "kubernetes.io/role/elb" = 1
-  }
-
   private_subnet_tags = {
     "kubernetes.io/role/internal-elb" = 1
-    "karpenter.sh/discovery" = "automode-demo"
+    "karpenter.sh/discovery" = var.name
+    "kubernetes.io/cluster/${var.name}" = "owned"
   }
 
-  tags = local.tags
+  public_subnet_tags = {
+    "kubernetes.io/role/elb" = 1
+    "kubernetes.io/cluster/${var.name}" = "shared"
+  }
+
+  tags = merge(local.tags, {
+    "kubernetes.io/cluster/${var.name}" = "shared"
+    Component = "networking"
+    Service   = "vpc"
+  })
 }
 
 # S3 Gateway VPC Endpoint for secure, private access to S3
@@ -55,6 +61,8 @@ resource "aws_vpc_endpoint" "s3" {
   tags = merge(local.tags, {
     Name = "${var.name}-s3-vpc-endpoint"
     Purpose = "Secure S3 access for ECR and OpenWebUI"
+    Component = "networking"
+    Service = "vpc-endpoint"
   })
 }
 
@@ -80,6 +88,8 @@ resource "aws_security_group" "vpc_endpoints" {
 
   tags = merge(local.tags, {
     Name = "${var.name}-vpc-endpoints-sg"
+    Component = "security"
+    Service = "vpc-endpoint"
   })
 }
 
@@ -96,6 +106,8 @@ resource "aws_vpc_endpoint" "ecr_api" {
   tags = merge(local.tags, {
     Name = "${var.name}-ecr-api-vpc-endpoint"
     Purpose = "ECR API access for image pulls"
+    Component = "networking"
+    Service = "ecr"
   })
 }
 
@@ -112,6 +124,8 @@ resource "aws_vpc_endpoint" "ecr_dkr" {
   tags = merge(local.tags, {
     Name = "${var.name}-ecr-dkr-vpc-endpoint"
     Purpose = "ECR Docker registry access for image pulls"
+    Component = "networking"
+    Service = "ecr"
   })
 }
 

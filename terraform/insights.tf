@@ -18,7 +18,10 @@ resource "aws_iam_role" "cloudwatch_agent" {
     ]
   })
 
-  tags = local.tags
+  tags = merge(local.tags, {
+    Component = "security"
+    Service   = "cloudwatch"
+  })
 }
 
 # Attach the required CloudWatchAgentServerPolicy
@@ -45,7 +48,10 @@ resource "aws_eks_addon" "amazon_cloudwatch_observability" {
     service_account = "cloudwatch-agent"
   }
   
-  tags = local.tags
+  tags = merge(local.tags, {
+    Component = "monitoring"
+    Service   = "cloudwatch"
+  })
 }
 # KubeCost EKS Add-on (Optional - Free Standard Bundle)
 resource "aws_eks_addon" "kubecost" {
@@ -53,5 +59,8 @@ resource "aws_eks_addon" "kubecost" {
   cluster_name  = module.eks.cluster_name
   addon_name    = "kubecost_kubecost"
   
-  tags = local.tags
+  tags = merge(local.tags, {
+    Component = "monitoring"
+    Service   = "kubecost"
+  })
 }

@@ -17,7 +17,7 @@ module "external_secrets_pod_identity" {
       ]
       resources = concat(
         [for k, v in aws_secretsmanager_secret.postgres_credentials : v.arn],
-        [for k, v in aws_secretsmanager_secret.db_connection_string : v.arn],
+        # [for k, v in aws_secretsmanager_secret.db_connection_string : v.arn],
         [
           aws_secretsmanager_secret.litellm_master_salt.arn,
           aws_secretsmanager_secret.litellm_api_keys.arn,
@@ -37,9 +37,11 @@ module "external_secrets_pod_identity" {
     }
   }
 
-  tags = {
+  tags = merge(local.tags, {
     Environment = var.name
-  }
+    Component   = "security"
+    Service     = "external-secrets"
+  })
 }
 
 # Install External Secrets Operator with ClusterSecretStore
@@ -76,28 +78,28 @@ resource "helm_release" "external_secrets" {
 # ClusterSecretStore configuration moved to setup.tf using templates
 
 # Create separate connection string secrets for easier management and rotation - one per tenant
-resource "aws_secretsmanager_secret" "db_connection_string" {
-  for_each = var.tenants
-  
-  name_prefix = "${var.name}-db-connection-${each.value.name}-"
-  recovery_window_in_days = 0
-  
-  tags = {
-    Name   = "${var.name}-db-connection-${each.value.name}"
-    Tenant = each.value.name
-  }
-}
+# resource "aws_secretsmanager_secret" "db_connection_string" {
+#   for_each = var.tenants
+#   
+#   name_prefix = "${var.name}-db-connection-${each.value.name}-"
+#   recovery_window_in_days = 0
+#   
+#   tags = {
+#     Name   = "${var.name}-db-connection-${each.value.name}"
+#     Tenant = each.value.name
+#   }
+# }
 
-resource "aws_secretsmanager_secret_version" "db_connection_string_version" {
-  for_each = var.tenants
-  
-  secret_id = aws_secretsmanager_secret.db_connection_string[each.key].id
-  secret_string = jsonencode({
-    connectionString = "postgresql://postgres:${random_password.postgres.result}@${aws_db_instance.postgres.address}:${aws_db_instance.postgres.port}/vectordb_${each.value.name}"
-  })
-  
-  depends_on = [aws_db_instance.postgres]
-}
+# resource "aws_secretsmanager_secret_version" "db_connection_string_version" {
+#   for_each = var.tenants
+#   
+#   secret_id = aws_secretsmanager_secret.db_connection_string[each.key].id
+#   secret_string = jsonencode({
+#     connectionString = "postgresql://postgres:${random_password.postgres.result}@${aws_db_instance.postgres.address}:${aws_db_instance.postgres.port}/vectordb_${each.value.name}"
+#   })
+#   
+#   depends_on = [aws_db_instance.postgres]
+# }
 
 # The access to the new secret is already included in the Pod Identity policy statements above
 
@@ -106,9 +108,11 @@ resource "aws_secretsmanager_secret" "oauth_credentials" {
   name_prefix = "${var.name}-oauth-"
   recovery_window_in_days = 0  # Allow immediate deletion
   
-  tags = {
-    Name = "${var.name}-oauth-credentials"
-  }
+  tags = merge(local.tags, {
+    Name      = "${var.name}-oauth-credentials"
+    Component = "security"
+    Service   = "openwebui"
+  })
 }
 
 resource "aws_secretsmanager_secret_version" "oauth_credentials_version" {
@@ -120,19 +124,19 @@ resource "aws_secretsmanager_secret_version" "oauth_credentials_version" {
   })
 }
 
-resource "aws_secretsmanager_secret" "bda_access_credentials" {
-  name = "bda-access-credentials"
-  recovery_window_in_days = 0
+# resource "aws_secretsmanager_secret" "bda_access_credentials" {
+#   name = "bda-access-credentials"
+#   recovery_window_in_days = 0
 
-  tags = {
-	Name = "${var.name}-oauth-credentials"
-  }
-}
+#   tags = {
+# 	Name = "${var.name}-oauth-credentials"
+#   }
+# }
 
-resource "aws_secretsmanager_secret_version" "bda_access_credentials_version" {
-  secret_id = aws_secretsmanager_secret.bda_access_credentials.id
-  secret_string = jsonencode({
-    username = "dummy-aws-access-key-id"
-    password = "dummy-aws-secret-access-key"
-  })
-}
+# resource "aws_secretsmanager_secret_version" "bda_access_credentials_version" {
+#   secret_id = aws_secretsmanager_secret.bda_access_credentials.id
+#   secret_string = jsonencode({
+#     username = "dummy-aws-access-key-id"
+#     password = "dummy-aws-secret-access-key"
+#   })
+# }

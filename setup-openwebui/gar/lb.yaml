@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: open-webui-service
+  namespace: gar-webui
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: external
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+    service.beta.kubernetes.io/aws-load-balancer-additional-resource-tags: "Blueprint=automode-cluster,Environment=automode-cluster,Owner=ITDD-ITSMKube-SharePoint,Project=gar-gpt,CostCenter=engineering,Component=networking,Service=openwebui,Tenant=gar"
+spec:
+  selector:
+    app.kubernetes.io/component: open-webui
+  type: LoadBalancer
+  loadBalancerClass: eks.amazonaws.com/nlb
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080

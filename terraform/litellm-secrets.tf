@@ -14,9 +14,11 @@ resource "aws_secretsmanager_secret" "litellm_master_salt" {
   name_prefix = "${var.name}-litellm-master-salt-"
   recovery_window_in_days = 0
   
-  tags = {
-    Name = "${var.name}-litellm-master-salt"
-  }
+  tags = merge(local.tags, {
+    Name      = "${var.name}-litellm-master-salt"
+    Component = "security"
+    Service   = "litellm"
+  })
 }
 
 locals {
@@ -39,9 +41,11 @@ resource "aws_secretsmanager_secret" "litellm_api_keys" {
   name_prefix = "${var.name}-litellm-api-keys-"
   recovery_window_in_days = 0
   
-  tags = {
-    Name = "${var.name}-litellm-api-keys"
-  }
+  tags = merge(local.tags, {
+    Name      = "${var.name}-litellm-api-keys"
+    Component = "security"
+    Service   = "litellm"
+  })
 }
 
 # Store empty JSON object initially - will be populated by update-secrets.sh script

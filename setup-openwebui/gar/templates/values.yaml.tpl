@@ -1,0 +1,142 @@
+# Open WebUI Helm Chart Values - GAR GPT Custom Image v0.1.0
+
+# Use custom GAR GPT branded image with minimal approach (database compatible)
+image:
+  repository: 513158237195.dkr.ecr.ap-southeast-3.amazonaws.com/openwebui/gar-gpt
+  tag: v0.6.21
+  pullPolicy: IfNotPresent
+
+# Configure persistence to use S3
+persistence:
+  enabled: true
+  provider: "s3"
+  s3:
+    bucket: "${s3_bucket_name}"
+    region: "${region}"
+    endpointUrl: "https://s3.${region}.amazonaws.com"
+
+# Configure service account for Pod Identity
+serviceAccount:
+  enable: true
+  name: "open-webui-pia"  # Must match the service_account in the Pod Identity association
+
+# Configure environment variables
+extraEnvVars:
+  # Database configuration for PostgreSQL with pg_vector
+  - name: "DATABASE_URL"
+    valueFrom:
+      secretKeyRef:
+        name: "openwebui-db-credentials"
+        key: "url"
+  - name: "VECTOR_DB"
+    value: "pgvector"
+  
+  # OAuth configuration from ConfigMap (non-sensitive)
+  - name: "ENABLE_OAUTH_SIGNUP"
+    valueFrom:
+      configMapKeyRef:
+        name: "openwebui-oauth-config"
+        key: "ENABLE_OAUTH_SIGNUP"
+  - name: "OAUTH_PROVIDER_NAME"
+    valueFrom:
+      configMapKeyRef:
+        name: "openwebui-oauth-config"
+        key: "OAUTH_PROVIDER_NAME"
+  - name: "OAUTH_SCOPES"
+    valueFrom:
+      configMapKeyRef:
+        name: "openwebui-oauth-config"
+        key: "OAUTH_SCOPES"
+  - name: "OAUTH_USERNAME_CLAIM"
+    valueFrom:
+      configMapKeyRef:
+        name: "openwebui-oauth-config"
+        key: "OAUTH_USERNAME_CLAIM"
+  - name: "OAUTH_CLIENT_ID"
+    valueFrom:
+      configMapKeyRef:
+        name: "openwebui-oauth-config"
+        key: "OAUTH_CLIENT_ID"
+  - name: "MICROSOFT_CLIENT_ID"
+    valueFrom:
+      configMapKeyRef:
+        name: "openwebui-oauth-config"
+        key: "MICROSOFT_CLIENT_ID"
+  - name: "MICROSOFT_CLIENT_TENANT_ID"
+    valueFrom:
+      configMapKeyRef:
+        name: "openwebui-oauth-config"
+        key: "MICROSOFT_CLIENT_TENANT_ID"
+  
+  # OAuth configuration from Secrets Manager (sensitive)
+  - name: "MICROSOFT_CLIENT_SECRET"
+    valueFrom:
+      secretKeyRef:
+        name: "openwebui-oauth-credentials"
+        key: "MICROSOFT_CLIENT_SECRET"
+  - name: "OAUTH_CLIENT_SECRET"
+    valueFrom:
+      secretKeyRef:
+        name: "openwebui-oauth-credentials"
+        key: "OAUTH_CLIENT_SECRET"
+  - name: "OPENID_PROVIDER_URL"
+    valueFrom:
+      secretKeyRef:
+        name: "openwebui-oauth-credentials"
+        key: "OPENID_PROVIDER_URL"
+  
+  # Document processing configuration - use existing Tika service
+  - name: "CONTENT_EXTRACTION_ENGINE"
+    value: "Tika"
+  - name: "TIKA_SERVER_URL"
+    value: "http://tika.${shared_namespace}.svc.cluster.local:9998"
+  
+  # LiteLLM API Key configuration - using OPENAI_API_KEYS with proper index mapping
+  # The secret contains: dummy-pipeline-key;actual-litellm-key;dummy-vllm-key
+  - name: "OPENAI_API_KEYS"
+    valueFrom:
+      secretKeyRef:
+        name: "litellm-master-key"
+        key: "OPENAI_API_KEYS"
+  
+
+openaiBaseApiUrls: [
+  "http://litellm-service.litellm.svc.cluster.local:4000/v1",
+  "http://vllm-service.vllm-inference.svc.cluster.local/v1"
+]
+
+# Branding assets are now embedded in the custom image v0.0.2
+# No ConfigMap volume mounts needed
+# extraVolumes: []
+# extraVolumeMounts: []
+
+# Configure resource limits to prevent OOM issues
+resources:
+  requests:
+    cpu: "750m"
+    memory: "1Gi"
+  limits:
+    cpu: "2000m"
+    memory: "3Gi"
+
+# Disable the embedded Ollama chart
+ollama:
+  enabled: false
+
+# Enable Pipelines persistence
+pipelines:
+  persistence:
+    enabled: true
+    storageClass: "auto-ebs-sc"
+    accessModes: ["ReadWriteOnce"]
+    size: "10Gi"  
+  serviceAccount:
+    enable: true
+    name: "pipelines-${tenant_name}-sa"
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "128Mi"
+    limits:
+      cpu: "200m"
+      memory: "1024Mi"

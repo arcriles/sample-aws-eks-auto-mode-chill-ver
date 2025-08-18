@@ -1,6 +1,6 @@
 module "bda_pod_identity" {
   source = "terraform-aws-modules/eks-pod-identity/aws"
-  name = "bda-workflow-legal"
+  name = "bda-workflow-gar"
   attach_custom_policy = true
   policy_statements = [
     {
@@ -27,7 +27,7 @@ module "bda_pod_identity" {
   associations = {
     bda_workflow = {
       service_account = "bda-workflow-sa"
-      namespace       = "legal-webui"
+      namespace       = "gar-webui"
       cluster_name    = module.eks.cluster_name
     }
   }

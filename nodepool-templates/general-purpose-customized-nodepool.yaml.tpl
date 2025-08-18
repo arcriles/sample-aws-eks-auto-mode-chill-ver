@@ -3,17 +3,14 @@ kind: NodePool
 metadata:
   labels:
     app.kubernetes.io/managed-by: eks
-  name: general-purpose-scheduled
+  name: general-purpose-customized
 spec:
   weight: 10
   disruption:
     consolidationPolicy: WhenUnderutilized
-    expireAfter: 720h
+    consolidateAfter: 720h
     budgets:
     - nodes: "20%"
-    - nodes: "0"
-      schedule: "0 9 * * *"
-      duration: 9h
   template:
     spec:
       expireAfter: 336h
@@ -32,6 +29,7 @@ spec:
         - c
         - m
         - r
+        - t
       - key: eks.amazonaws.com/instance-generation
         operator: Gt
         values:

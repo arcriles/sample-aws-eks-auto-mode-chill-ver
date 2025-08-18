@@ -11,9 +11,11 @@ resource "aws_secretsmanager_secret" "litellm_db_credentials" {
   description = "PostgreSQL credentials for LiteLLM"
   recovery_window_in_days = 0
   
-  tags = {
-    Name = "${var.name}-litellm-db-credentials"
-  }
+  tags = merge(local.tags, {
+    Name      = "${var.name}-litellm-db-credentials"
+    Component = "security"
+    Service   = "litellm"
+  })
 }
 
 # Store the credentials in the secret
@@ -113,9 +115,9 @@ resource "aws_db_instance" "litellm_postgres" {
   identifier             = "${var.name}-litellm-postgres"
   engine                 = "postgres"
   engine_version         = "15.13"
-  instance_class         = "db.t4g.medium"
+  instance_class         = "db.t4g.small"
   allocated_storage      = 20
-  max_allocated_storage  = 100
+  max_allocated_storage  = 40
   storage_type           = "gp3"
   storage_encrypted      = true
   
@@ -142,10 +144,12 @@ resource "aws_db_instance" "litellm_postgres" {
   monitoring_role_arn = aws_iam_role.litellm_rds_monitoring.arn
   
   apply_immediately       = true
-  
-  tags = {
+
+  tags = merge(local.tags, {
     Name = "${var.name}-litellm-postgres"
-  }
+    Component = "database"
+    Service   = "litellm"
+  })
 }
 
 # DB Subnet Group for LiteLLM
@@ -163,9 +167,11 @@ resource "aws_secretsmanager_secret" "litellm_db_connection_string" {
   name_prefix = "${var.name}-litellm-db-connection-"
   recovery_window_in_days = 0
   
-  tags = {
-    Name = "${var.name}-litellm-db-connection"
-  }
+  tags = merge(local.tags, {
+    Name      = "${var.name}-litellm-db-connection"
+    Component = "security"
+    Service   = "litellm"
+  })
 }
 
 resource "aws_secretsmanager_secret_version" "litellm_db_connection_string_version" {
